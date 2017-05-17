@@ -39,8 +39,8 @@ def question3(num_runs=20, num_episodes=200, max_episode_step=20,
     logger = getLogger('assignment.driver.q3')
 
     params = {
-        'learning_rate': np.arange(0.2, 2, 0.1),
-        'discount_rate': np.arange(0.5, 0.8, 0.05),
+        'learning_rate': np.arange(0.2, 4, 0.4),
+        'discount_rate': np.array([0.3, 0.5, 0.6, 0.7, 0.8, 0.9])
         # 'epsilon': np.arange(0, 0.5, 0.1),
         # 'trace_decay_rate': np.array([0.5]), #np.arange(0, 1, 0.2),
     }
@@ -56,8 +56,8 @@ def question3(num_runs=20, num_episodes=200, max_episode_step=20,
     results = np.empty((total_combinations, len(params) + 1))
     for values in product(*params.values()):
         kwargs = dict(zip(params.keys(), values))
-        policy_partial = partial(EpsilonGreedyDecay,
-                                 epsilon=0.4)
+        policy_partial = partial(EpsilonGreedy,
+                                 epsilon=0.1)
         qs_partial = partial(NeuralQsEligibility,
                              learning_rate=kwargs['learning_rate'],
                              discount_rate=kwargs['discount_rate'],

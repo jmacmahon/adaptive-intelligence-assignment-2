@@ -6,12 +6,14 @@ import matplotlib.pyplot as plt
 from functools import partial
 from itertools import product
 from logging import getLogger
+from pickle import load, dump
 
 from assignment.environment import *
 from assignment.sarsa.core import *
 from assignment.sarsa.policy import *
 from assignment.sarsa.qmodel import *
 from assignment.sarsa.evaluation import *
+from assignment.display import *
 
 NUM_PROCESSES = 6
 
@@ -37,10 +39,10 @@ def question3(num_runs=10, num_episodes=200, max_episode_step=30,
     logger = getLogger('assignment.driver.q3')
 
     params = {
-        'learning_rate': np.arange(0.0, 1.0, 0.2),
+        'learning_rate': np.arange(0.6, 1.1, 0.1),
         'discount_rate': np.arange(0.0, 1.0, 0.1),
-        'epsilon': np.arange(0, 0.5, 0.1),
-        'trace_decay_rate': np.array([0.5]), #np.arange(0, 1, 0.2),
+        'epsilon': np.arange(0, 1, 0.2),
+        # 'trace_decay_rate': np.array([0.5]), #np.arange(0, 1, 0.2),
     }
 
     if hr_environment is None:
@@ -57,17 +59,26 @@ def question3(num_runs=10, num_episodes=200, max_episode_step=30,
         qs_partial = partial(NeuralQsEligibility,
                              learning_rate=kwargs['learning_rate'],
                              discount_rate=kwargs['discount_rate'],
-                             trace_decay_rate=kwargs['trace_decay_rate'])
+                             trace_decay_rate=0.5)
         runs = SarsaMultipleRuns(num_runs, num_episodes, max_episode_step,
                                  hr_environment, policy_partial, qs_partial)
         step_curve, _ = runs.run()
-        evaluation_metric = np.sum(step_curve) # Why?
+
+        # Weighted average steps
+        avg_curve = np.mean(step_curve, axis=0)
+        evaluation_metric = np.sum(np.linspace(0, 1, num_episodes) * avg_curve)
+
         results[i, :] = values + (evaluation_metric,)
         detailed_results.append((kwargs, step_curve))
         i += 1
         logger.info('Evaluated parameter combination {} of {}; values = {}'
                     .format(i, total_combinations, values))
     return detailed_results, results
+
+
+def question3_load_pickle():
+    with open('q3_results_de7972b.pickle', 'rb') as f:
+        return load(f)
 
 
 def image_monkey():

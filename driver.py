@@ -9,6 +9,9 @@ from assignment.environment import *
 from assignment.sarsa.core import *
 from assignment.sarsa.policy import *
 from assignment.sarsa.qmodel import *
+from assignment.sarsa.evaluation import *
+
+NUM_PROCESSES = 6
 
 coloredlogs.install(level='INFO')
 
@@ -36,7 +39,7 @@ def moving_average(x, window_size):
     return np.convolve(x, window, 'same')
 
 def plot_runs(runs):
-    step_curves, reward_curves = runs.run()
+    step_curves, reward_curves = runs.run(NUM_PROCESSES)
 
     mean_step_curve = np.mean(step_curves, axis=0)
     errorbars_step_curve = (np.std(step_curves, axis=0)

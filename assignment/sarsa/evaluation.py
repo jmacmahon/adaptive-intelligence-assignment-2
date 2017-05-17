@@ -36,5 +36,7 @@ class SarsaMultipleRuns(object):
     def run(self, processes=6):
         pool = Pool(processes)
         curves = pool.map(self._run_one, range(self._num_runs))
+        pool.close()
+        pool.join()
         step_curves, reward_curves = zip(*curves)
         return np.array(step_curves), np.array(reward_curves)

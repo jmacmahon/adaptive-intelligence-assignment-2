@@ -28,7 +28,7 @@ class SarsaEpisode(object):
             new_action = self._policy.choose_action(new_qs, episode_number)
 
             self._parametrised_qs.update(state, action, reward, new_state,
-                                         new_action,
+                                         new_action, episode_number,
                                          cached={'qs': qs, 'new_qs': new_qs})
 
             state = new_state

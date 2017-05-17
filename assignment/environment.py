@@ -58,10 +58,12 @@ class HomingRobot(object):
     # Down, up, right, left
     _actions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
 
-    def __init__(self, width, height, home_coords):
+    def __init__(self, width, height, home_coords, reward, punishment):
         self._width = width
         self._height = height
         self._home_coords = home_coords
+        self._reward = reward
+        self._punishment = punishment
         self.reset()
 
     def reset(self):
@@ -103,9 +105,9 @@ class HomingRobot(object):
         self._x, self._y = new_x, new_y
 
         if self.terminated:
-            reward = 10
+            reward = self._reward
         else:
-            reward = 0
+            reward = self._punishment
 
         self._logger.debug(('Moved; action_index = {}, new x = {}, new y ' +
                             '= {}, reward = {}')

@@ -19,19 +19,22 @@ e_greedy_decay_policy_partial = partial(EpsilonGreedyDecay, epsilon=0.5)
 e_greedy_policy_partial = partial(EpsilonGreedyDecay, epsilon=0.1)
 basic_qs_partial = partial(BasicQs, initial_value=0,
                            learning_rate=0.8, discount_rate=0.9)
+basic_qs_eligibility_partial = partial(BasicQsEligibilityTrace,
+                                       initial_value=0, learning_rate=0.8,
+                                       discount_rate=0.9, trace_decay_rate=0.3)
 
 def image_monkey():
     im = ImageMonkey()
     sarsa_runs = SarsaMultipleRuns(100, 100, 20, im,
                                    e_greedy_decay_policy_partial,
-                                   basic_qs_partial)
+                                   basic_qs_eligibility_partial)
     return sarsa_runs
 
 def homing_robot():
-    hr = HomingRobot(10, 10, (5, 5))
+    hr = HomingRobot(10, 10, (5, 5), 10, 0)
     sarsa_runs = SarsaMultipleRuns(100, 200, 30, hr,
                                    e_greedy_decay_policy_partial,
-                                   basic_qs_partial)
+                                   basic_qs_eligibility_partial)
     return sarsa_runs
 
 def moving_average(x, window_size):

@@ -3,11 +3,15 @@ from logging import getLogger
 
 
 class QModel(object):
+    def __init__(self, num_states, num_actions):
+        self._num_states = num_states
+        self._num_actions = num_actions
+
     def compute(self, state):
         raise NotImplementedError()
 
     def update(self, state, action, reward, new_state, new_action,
-               cached=None):
+               episode_number, cached=None):
         raise NotImplementedError()
 
     @property
@@ -24,6 +28,7 @@ class BasicQs(QModel):
 
     def __init__(self, initial_value, num_states, num_actions, learning_rate,
                  discount_rate):
+        super().__init__(num_states, num_actions)
         self._qs = np.full((num_states, num_actions), float(initial_value))
         self._learning_rate = learning_rate
         self._discount_rate = discount_rate
@@ -32,7 +37,7 @@ class BasicQs(QModel):
         return self._qs[state, :]
 
     def update(self, state, action, reward, new_state, new_action,
-               cached=None):
+               episode_number, cached=None):
         dq = self._learning_rate * (reward +
                                     (self._discount_rate *
                                      self._qs[new_state, new_action]) -
@@ -50,3 +55,27 @@ class BasicQs(QModel):
     @property
     def qs(self):
         return self._qs
+
+
+class BasicQsEligibilityTrace(BasicQs):
+    _logger = getLogger('assignment.sarsa.qs.basicqs_eligibility')
+
+    def __init__(self, initial_value, num_states, num_actions, learning_rate,
+                 discount_rate, trace_decay_rate):
+        super().__init__(initial_value, num_states, num_actions, learning_rate,
+                         discount_rate)
+        self._trace_decay_rate = trace_decay_rate
+        self._trace = np.zeros((num_states, num_actions))
+
+    def update(self, state, action, reward, new_state, new_action,
+               episode_number, cached=None):
+        dq = self._learning_rate * (reward +
+                                 (self._discount_rate *
+                                  self._qs[new_state, new_action]) -
+                                 self._qs[state, action])
+        self._trace[state, action] = self._trace[state, action] + 1
+
+        self._qs += self._trace * dq
+        self._trace *= self._trace_decay_rate
+
+        self._logger.debug('Updated Q-values; dq = {}'.format(dq))

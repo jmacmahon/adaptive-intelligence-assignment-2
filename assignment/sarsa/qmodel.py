@@ -24,7 +24,7 @@ class BasicQs(QModel):
 
     def __init__(self, initial_value, num_states, num_actions, learning_rate,
                  discount_rate):
-        self._qs = np.full((num_states, num_actions), initial_value)
+        self._qs = np.full((num_states, num_actions), float(initial_value))
         self._learning_rate = learning_rate
         self._discount_rate = discount_rate
 

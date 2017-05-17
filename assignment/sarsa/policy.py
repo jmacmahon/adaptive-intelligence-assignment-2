@@ -27,6 +27,24 @@ class EpsilonGreedy(Policy):
         return action
 
 
+class EpsilonGreedyDecay(Policy):
+    _logger = getLogger('assignment.sarsa.policy.epsilongreedy')
+
+    def __init__(self, num_actions, epsilon):
+        super().__init__(num_actions)
+        self._epsilon = epsilon
+
+    def choose_action(self, qs, episode_number):
+        if (np.random.rand() < (self._epsilon / (episode_number + 1))
+            or np.allclose(qs[0], qs)):
+            action = np.random.randint(self._num_actions)
+            self._logger.debug('Choosing randomly: {}'.format(action))
+        else:
+            action = np.argmax(qs)
+            self._logger.debug('Choosing best: {}'.format(action))
+        return action
+
+
 class SoftMaxDecay(Policy):
     def __init__(self, num_actions, tau):
         super().__init__(num_actions)

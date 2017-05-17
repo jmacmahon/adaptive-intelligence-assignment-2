@@ -9,6 +9,9 @@ class ImageMonkey(object):
     # States: 0 = neutral, 1 = pressed red, 2 = pressed green
 
     def __init__(self):
+        self.reset()
+
+    def reset(self):
         self._state = 0
         self._buttons_pressed = 0
 
@@ -50,16 +53,18 @@ class ImageMonkey(object):
 
 
 class HomingRobot(object):
-    # Up, down, right, left
+    _logger = getLogger('assignment.environment.homingrobot')
+
+    # Down, up, right, left
     _actions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
 
     def __init__(self, width, height, home_coords):
         self._width = width
         self._height = height
         self._home_coords = home_coords
-        self.reset_random()
+        self.reset()
 
-    def reset_random(self):
+    def reset(self):
         self._x = randint(0, self._width - 1)
         self._y = randint(0, self._height - 1)
 
@@ -90,14 +95,19 @@ class HomingRobot(object):
         new_x = self._x + action[0]
         new_y = self._y + action[1]
 
-        if new_x < 0 or new_x > self._width:
+        if new_x < 0 or new_x >= self._width:
             new_x = self._x
-        if new_y < 0 or new_x > self._width:
+        if new_y < 0 or new_y >= self._height:
             new_y = self._y
 
         self._x, self._y = new_x, new_y
 
         if self.terminated:
-            return 10
+            reward = 10
         else:
-            return 0
+            reward = 0
+
+        self._logger.debug(('Moved; action_index = {}, new x = {}, new y ' +
+                            '= {}, reward = {}')
+                      .format(action_index, new_x, new_y, reward))
+        return reward

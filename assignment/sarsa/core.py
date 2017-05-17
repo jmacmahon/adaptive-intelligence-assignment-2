@@ -10,9 +10,9 @@ class SarsaEpisode(object):
         self._parametrised_qs = parametrised_qs
         self._policy = policy
         self._max_steps = max_steps
-        self._step = 0
 
     def run_episode(self):
+        self._environment.reset()
         state = self._environment.state
         qs = self._parametrised_qs.compute(state)
         step = 0
@@ -41,15 +41,13 @@ class SarsaEpisode(object):
 class SarsaRun(object):
     _logger = getLogger('assignment.sarsa.run')
 
-    def __init__(self, num_episodes, episode_factory):
+    def __init__(self, num_episodes, episode):
         self._num_episodes = num_episodes
-        self._episode_factory = episode_factory
+        self._episode = episode
 
     def run(self):
         for ii in range(self._num_episodes):
-            episode = self._episode_factory()
-            episode.run_episode()
-            self._logger.debug(('Completed {} episodes out of {}; ' +
-                                'episode_factory = {}')
+            self._episode.run_episode()
+            self._logger.info('Completed {} episodes out of {}; episode = {}'
                                .format(ii + 1, self._num_episodes,
-                                       self._episode_factory))
+                                       self._episode))

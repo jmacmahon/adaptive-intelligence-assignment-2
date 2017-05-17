@@ -34,10 +34,14 @@ def get_3d_tunings_figures(tunings, labels=None):
 
 def get_epsilon_curves_figure(epsilon_curves):
     fig, axes = plt.subplots(1, 1)
-    for (epsilon, curves) in epsilon_curves.items():
+    for ((epsilon, decay_flag), curves) in epsilon_curves.items():
+        if decay_flag:
+            label = 'ε = {}, with decay'.format(epsilon)
+        else:
+            label = 'ε = {}, no decay'.format(epsilon)
         axes.errorbar(x=np.arange(curves['mean'].shape[0]),
                       y=curves['mean'],
                       yerr=curves['errorbars'],
-                      label='ε = {}'.format(epsilon))
+                      label=label)
     axes.legend()
     return fig

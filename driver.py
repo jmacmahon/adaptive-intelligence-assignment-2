@@ -76,21 +76,31 @@ def question3_lr_dr(num_runs=20, num_episodes=200, max_episode_step=20,
     return detailed_results, results
 
 
-def question3_epsilon(num_runs=100, num_episodes=200, max_episode_step=20,
+def question3_epsilon(num_runs=1000, num_episodes=200, max_episode_step=20,
                       hr_environment=None, learning_rate=2, discount_rate=0.6,
                       trace_decay_rate=0.5):
     logger = getLogger('assignment.driver.q3.epsilon')
 
     if hr_environment is None:
         hr_environment = HomingRobot(10, 10, (5, 5), 10, 0)
-    qs_partial = partial(NeuralQsEligibility, learning_rate=learning_rate,
-                         discount_rate=discount_rate,
-                         trace_decay_rate=trace_decay_rate)
+    qs_partial = partial(NeuralQs, learning_rate=learning_rate,
+                         discount_rate=discount_rate)
 
-    epsilons = [0, 0.05, 0.1, 0.5, 1]
+    epsilons = list(product([0, 0.05, 0.1, 0.5, 1], [True, False]))
+    epsilons = [(0, False),
+                (0.05, False),
+                (0.1, False),
+                (0.5, False),
+                (1, False),
+                (1, True),
+                (10, True),
+                (100, True)]
     curves = {}
-    for (i, epsilon) in zip(range(len(epsilons)), epsilons):
-        policy_partial = partial(EpsilonGreedy, epsilon=epsilon)
+    for (i, (epsilon, decay_flag)) in zip(range(len(epsilons)), epsilons):
+        if decay_flag:
+            policy_partial = partial(EpsilonGreedyDecay, epsilon=epsilon)
+        else:
+            policy_partial = partial(EpsilonGreedy, epsilon=epsilon)
         runs = SarsaMultipleRuns(num_runs, num_episodes, max_episode_step,
                                  hr_environment, policy_partial, qs_partial)
         step_curves, _ = runs.run()
@@ -98,12 +108,13 @@ def question3_epsilon(num_runs=100, num_episodes=200, max_episode_step=20,
         mean_step_curve = np.mean(step_curves, axis=0)
         errorbars_step_curve = (np.std(step_curves, axis=0) /
                                 np.sqrt(step_curves.shape[0]))
-        curves[epsilon] = {
+        curves[(epsilon, decay_flag)] = {
              'mean': mean_step_curve,
              'errorbars': errorbars_step_curve
         }
-        logger.info('Evaluated epsilon trial {} of {}; epsilon = {}'
-                     .format(i + 1, len(epsilons), epsilon))
+        logger.info(('Evaluated epsilon trial {} of {}; epsilon = {}, ' +
+                     'decay_flag = {}')
+                    .format(i + 1, len(epsilons), epsilon, decay_flag))
     return curves
 
 

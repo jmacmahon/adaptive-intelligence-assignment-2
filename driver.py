@@ -28,22 +28,24 @@ basic_qs_eligibility_partial = partial(BasicQsEligibilityTrace,
                                        initial_value=0, learning_rate=0.8,
                                        discount_rate=0.9, trace_decay_rate=0.5)
 nn_qs_partial = partial(NeuralQs, learning_rate=0.8, discount_rate=0.9)
-nn_qs_eligibility_partial = partial(NeuralQsEligibility, learning_rate=0.8,
-                                    discount_rate=0.9, trace_decay_rate=0.5)
+nn_qs_eligibility_partial = partial(NeuralQsEligibility, learning_rate=2,
+                                    discount_rate=0.6, trace_decay_rate=0.5)
 
 
-def question3(num_runs=30, num_episodes=200, max_episode_step=20,
+def question3(num_runs=20, num_episodes=200, max_episode_step=20,
               hr_environment=None):
     """Optimise learning rate, discount rate and epsilon"""
 
     logger = getLogger('assignment.driver.q3')
 
     params = {
-        'learning_rate': np.arange(0.2, 1, 0.1),
+        'learning_rate': np.arange(0.2, 2, 0.1),
         'discount_rate': np.arange(0.5, 0.8, 0.05),
-        'epsilon': np.arange(0, 0.5, 0.1),
+        # 'epsilon': np.arange(0, 0.5, 0.1),
         # 'trace_decay_rate': np.array([0.5]), #np.arange(0, 1, 0.2),
     }
+
+    # TODO graph epsilon and trace_decay_rate
 
     if hr_environment is None:
         hr_environment = HomingRobot(10, 10, (5, 5), 10, 0)
@@ -55,7 +57,7 @@ def question3(num_runs=30, num_episodes=200, max_episode_step=20,
     for values in product(*params.values()):
         kwargs = dict(zip(params.keys(), values))
         policy_partial = partial(EpsilonGreedyDecay,
-                                 epsilon=kwargs['epsilon'])
+                                 epsilon=0.4)
         qs_partial = partial(NeuralQsEligibility,
                              learning_rate=kwargs['learning_rate'],
                              discount_rate=kwargs['discount_rate'],
@@ -67,6 +69,7 @@ def question3(num_runs=30, num_episodes=200, max_episode_step=20,
         # Weighted average steps
         avg_curve = np.mean(step_curve, axis=0)
         evaluation_metric = np.sum(np.linspace(0, 1, num_episodes) * avg_curve)
+        # evaluation_metric = np.sum(avg_curve[-100:])
 
         results[i, :] = values + (evaluation_metric,)
         detailed_results.append((kwargs, step_curve))
@@ -91,7 +94,7 @@ def image_monkey():
 
 def homing_robot():
     hr = HomingRobot(10, 10, (5, 5), 10, 0)
-    sarsa_runs = SarsaMultipleRuns(10, 200, 30, hr,
+    sarsa_runs = SarsaMultipleRuns(100, 200, 30, hr,
                                    e_greedy_decay_policy_partial,
                                    nn_qs_eligibility_partial)
     return sarsa_runs

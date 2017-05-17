@@ -39,9 +39,9 @@ def question3(num_runs=30, num_episodes=200, max_episode_step=20,
     logger = getLogger('assignment.driver.q3')
 
     params = {
-        'learning_rate': np.arange(0.6, 1.2, 0.1),
-        'discount_rate': np.arange(0.6, 0.8, 0.05),
-        'epsilon': np.arange(0, 0.4, 0.1),
+        'learning_rate': np.arange(0.2, 1, 0.1),
+        'discount_rate': np.arange(0.5, 0.8, 0.05),
+        'epsilon': np.arange(0, 0.5, 0.1),
         # 'trace_decay_rate': np.array([0.5]), #np.arange(0, 1, 0.2),
     }
 
@@ -76,8 +76,8 @@ def question3(num_runs=30, num_episodes=200, max_episode_step=20,
     return detailed_results, results
 
 
-def question3_load_pickle():
-    with open('q3_results_362a88b.pickle', 'rb') as f:
+def question3_load_pickle(commit='362a88b'):
+    with open('q3_results_{}.pickle'.format(commit), 'rb') as f:
         return load(f)
 
 

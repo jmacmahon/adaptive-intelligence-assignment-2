@@ -4,6 +4,8 @@ import cProfile as profile
 import pstats
 import matplotlib.pyplot as plt
 from functools import partial
+from itertools import product
+from logging import getLogger
 
 from assignment.environment import *
 from assignment.sarsa.core import *
@@ -13,7 +15,8 @@ from assignment.sarsa.evaluation import *
 
 NUM_PROCESSES = 6
 
-coloredlogs.install(level='INFO')
+coloredlogs.install(level='WARN')
+coloredlogs.install(level='INFO', logger=getLogger('assignment.driver'))
 
 e_greedy_decay_policy_partial = partial(EpsilonGreedyDecay, epsilon=0.5)
 e_greedy_policy_partial = partial(EpsilonGreedyDecay, epsilon=0.1)
@@ -27,6 +30,46 @@ nn_qs_eligibility_partial = partial(NeuralQsEligibility, learning_rate=0.8,
                                     discount_rate=0.9, trace_decay_rate=0.5)
 
 
+def question3(num_runs=10, num_episodes=200, max_episode_step=30,
+              hr_environment=None):
+    """Optimise learning rate, discount rate and epsilon"""
+
+    logger = getLogger('assignment.driver.q3')
+
+    params = {
+        'learning_rate': np.arange(0.0, 1.0, 0.2),
+        'discount_rate': np.arange(0.0, 1.0, 0.1),
+        'epsilon': np.arange(0, 0.5, 0.1),
+        'trace_decay_rate': np.array([0.5]), #np.arange(0, 1, 0.2),
+    }
+
+    if hr_environment is None:
+        hr_environment = HomingRobot(10, 10, (5, 5), 10, 0)
+
+    detailed_results = []
+    total_combinations = len(list(product(*params.values())))
+    i = 0
+    results = np.empty((total_combinations, len(params) + 1))
+    for values in product(*params.values()):
+        kwargs = dict(zip(params.keys(), values))
+        policy_partial = partial(EpsilonGreedyDecay,
+                                 epsilon=kwargs['epsilon'])
+        qs_partial = partial(NeuralQsEligibility,
+                             learning_rate=kwargs['learning_rate'],
+                             discount_rate=kwargs['discount_rate'],
+                             trace_decay_rate=kwargs['trace_decay_rate'])
+        runs = SarsaMultipleRuns(num_runs, num_episodes, max_episode_step,
+                                 hr_environment, policy_partial, qs_partial)
+        step_curve, _ = runs.run()
+        evaluation_metric = np.sum(step_curve) # Why?
+        results[i, :] = values + (evaluation_metric,)
+        detailed_results.append((kwargs, step_curve))
+        i += 1
+        logger.info('Evaluated parameter combination {} of {}; values = {}'
+                    .format(i, total_combinations, values))
+    return detailed_results, results
+
+
 def image_monkey():
     im = ImageMonkey()
     sarsa_runs = SarsaMultipleRuns(100, 100, 20, im,
@@ -37,15 +80,10 @@ def image_monkey():
 
 def homing_robot():
     hr = HomingRobot(10, 10, (5, 5), 10, 0)
-    sarsa_runs = SarsaMultipleRuns(100, 200, 30, hr,
+    sarsa_runs = SarsaMultipleRuns(10, 200, 30, hr,
                                    e_greedy_decay_policy_partial,
                                    nn_qs_eligibility_partial)
     return sarsa_runs
-
-
-def moving_average(x, window_size):
-    window = np.ones(int(window_size)) / float(window_size)
-    return np.convolve(x, window, 'same')
 
 
 def plot_runs(runs):

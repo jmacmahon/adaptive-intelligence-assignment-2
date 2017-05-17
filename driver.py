@@ -32,16 +32,16 @@ nn_qs_eligibility_partial = partial(NeuralQsEligibility, learning_rate=0.8,
                                     discount_rate=0.9, trace_decay_rate=0.5)
 
 
-def question3(num_runs=20, num_episodes=200, max_episode_step=20,
+def question3(num_runs=30, num_episodes=200, max_episode_step=20,
               hr_environment=None):
     """Optimise learning rate, discount rate and epsilon"""
 
     logger = getLogger('assignment.driver.q3')
 
     params = {
-        'learning_rate': np.arange(0.6, 1.1, 0.1),
-        'discount_rate': np.arange(0.4, 1.0, 0.1),
-        'epsilon': np.arange(0, 1, 0.2),
+        'learning_rate': np.arange(0.6, 1.2, 0.1),
+        'discount_rate': np.arange(0.6, 0.8, 0.05),
+        'epsilon': np.arange(0, 0.4, 0.1),
         # 'trace_decay_rate': np.array([0.5]), #np.arange(0, 1, 0.2),
     }
 

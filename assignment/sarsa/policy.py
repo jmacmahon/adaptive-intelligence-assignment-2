@@ -35,8 +35,8 @@ class EpsilonGreedyDecay(Policy):
         self._epsilon = epsilon
 
     def choose_action(self, qs, episode_number):
-        if (np.random.rand() < (self._epsilon / (episode_number + 1))
-            or np.allclose(qs[0], qs)):
+        if (np.random.rand() < (self._epsilon / (episode_number + 1)) or
+                np.allclose(qs[0], qs)):
             action = np.random.randint(self._num_actions)
             self._logger.debug('Choosing randomly: {}'.format(action))
         else:

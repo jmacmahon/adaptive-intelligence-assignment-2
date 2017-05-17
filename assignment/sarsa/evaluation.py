@@ -9,7 +9,7 @@ class SarsaMultipleRuns(object):
     _logger = getLogger('assignment.sarsa.multipleruns')
 
     def __init__(self, num_runs, num_episodes, max_episode_step, environment,
-             policy_partial, parametrised_qs_partial):
+                 policy_partial, parametrised_qs_partial):
         self._num_runs = num_runs
         self._num_episodes = num_episodes
         self._max_episode_step = max_episode_step

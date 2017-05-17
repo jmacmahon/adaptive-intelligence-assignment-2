@@ -40,8 +40,8 @@ class BasicQs(QModel):
                episode_number, cached=None):
         dq = self._learning_rate * (reward +
                                     (self._discount_rate *
-                                     self._qs[new_state, new_action]) -
-                                    self._qs[state, action])
+                                     cached['new_qs'][new_action]) -
+                                    cached['qs'][action])
         selector = np.zeros(self._qs.shape)
         selector[state, action] = 1
         self._qs += selector * dq
@@ -70,12 +70,65 @@ class BasicQsEligibilityTrace(BasicQs):
     def update(self, state, action, reward, new_state, new_action,
                episode_number, cached=None):
         dq = self._learning_rate * (reward +
-                                 (self._discount_rate *
-                                  self._qs[new_state, new_action]) -
-                                 self._qs[state, action])
+                                    (self._discount_rate *
+                                     self._qs[new_state, new_action]) -
+                                    self._qs[state, action])
         self._trace[state, action] = self._trace[state, action] + 1
 
         self._qs += self._trace * dq
         self._trace *= self._trace_decay_rate
 
         self._logger.debug('Updated Q-values; dq = {}'.format(dq))
+
+
+class NeuralQs(QModel):
+    _logger = getLogger('assignment.sarsa.qs.neural')
+
+    def __init__(self, num_states, num_actions, learning_rate, discount_rate):
+        super().__init__(num_states, num_actions)
+        self._weights = np.random.rand(num_states, num_actions)
+        self._learning_rate = learning_rate
+        self._discount_rate = discount_rate
+
+    def compute(self, state):
+        actions_inputs = self._weights[state, :]
+        qvalues = 1 / (1 + np.exp(-actions_inputs))
+        return qvalues
+
+    def update(self, state, action, reward, new_state, new_action,
+               episode_number, cached=None):
+        dw = self._learning_rate * (reward +
+                                    (self._discount_rate *
+                                     cached['new_qs'][new_action]) -
+                                    cached['qs'][action])
+        selector = np.zeros(self._weights.shape)
+        selector[state, action] = 1
+        self._weights += selector * dw
+
+        self._logger.debug('Updated weights; dw = {}'.format(dw))
+
+
+class NeuralQsEligibility(NeuralQs):
+    _logger = getLogger('assignment.sarsa.qs.neural')
+
+    def __init__(self, num_states, num_actions, learning_rate, discount_rate,
+                 trace_decay_rate):
+        super().__init__(num_states, num_actions, learning_rate, discount_rate)
+        self._trace_decay_rate = trace_decay_rate
+        self._trace = np.zeros((num_states, num_actions))
+
+    def update(self, state, action, reward, new_state, new_action,
+               episode_number, cached=None):
+        dw = self._learning_rate * (reward +
+                                    (self._discount_rate *
+                                     cached['new_qs'][new_action]) -
+                                    cached['qs'][action])
+        selector = np.zeros(self._weights.shape)
+        selector[state, action] = 1
+        self._weights += selector * dw
+        self._trace[state, action] = self._trace[state, action] + 1
+
+        self._weights += self._trace * dw
+        self._trace *= self._trace_decay_rate
+
+        self._logger.debug('Updated weights; dw = {}'.format(dw))

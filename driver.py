@@ -21,7 +21,11 @@ basic_qs_partial = partial(BasicQs, initial_value=0,
                            learning_rate=0.8, discount_rate=0.9)
 basic_qs_eligibility_partial = partial(BasicQsEligibilityTrace,
                                        initial_value=0, learning_rate=0.8,
-                                       discount_rate=0.9, trace_decay_rate=0.3)
+                                       discount_rate=0.9, trace_decay_rate=0.5)
+nn_qs_partial = partial(NeuralQs, learning_rate=0.8, discount_rate=0.9)
+nn_qs_eligibility_partial = partial(NeuralQsEligibility, learning_rate=0.8,
+                                    discount_rate=0.9, trace_decay_rate=0.5)
+
 
 def image_monkey():
     im = ImageMonkey()
@@ -30,35 +34,38 @@ def image_monkey():
                                    basic_qs_eligibility_partial)
     return sarsa_runs
 
+
 def homing_robot():
     hr = HomingRobot(10, 10, (5, 5), 10, 0)
     sarsa_runs = SarsaMultipleRuns(100, 200, 30, hr,
                                    e_greedy_decay_policy_partial,
-                                   basic_qs_eligibility_partial)
+                                   nn_qs_eligibility_partial)
     return sarsa_runs
+
 
 def moving_average(x, window_size):
     window = np.ones(int(window_size)) / float(window_size)
     return np.convolve(x, window, 'same')
 
+
 def plot_runs(runs):
     step_curves, reward_curves = runs.run(NUM_PROCESSES)
 
     mean_step_curve = np.mean(step_curves, axis=0)
-    errorbars_step_curve = (np.std(step_curves, axis=0)
-                            / np.sqrt(step_curves.shape[0]))
+    errorbars_step_curve = (np.std(step_curves, axis=0) /
+                            np.sqrt(step_curves.shape[0]))
 
     mean_reward_curve = np.mean(reward_curves, axis=0)
-    errorbars_reward_curve = (np.std(reward_curves, axis=0)
-                            / np.sqrt(reward_curves.shape[0]))
+    errorbars_reward_curve = (np.std(reward_curves, axis=0) /
+                              np.sqrt(reward_curves.shape[0]))
 
     fig, (step_axes, reward_axes) = plt.subplots(2, 1)
     step_axes.errorbar(x=np.arange(step_curves.shape[1]),
                        y=mean_step_curve,
                        yerr=errorbars_step_curve)
     reward_axes.errorbar(x=np.arange(reward_curves.shape[1]),
-                       y=mean_reward_curve,
-                       yerr=errorbars_reward_curve)
+                         y=mean_reward_curve,
+                         yerr=errorbars_reward_curve)
     plt.show()
 
 # if __name__ == '__main__':

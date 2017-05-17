@@ -111,5 +111,5 @@ class HomingRobot(object):
 
         self._logger.debug(('Moved; action_index = {}, new x = {}, new y ' +
                             '= {}, reward = {}')
-                      .format(action_index, new_x, new_y, reward))
+                           .format(action_index, new_x, new_y, reward))
         return reward

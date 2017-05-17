@@ -33,6 +33,7 @@ class SarsaEpisode(object):
 
             state = new_state
             action = new_action
+            qs = new_qs
 
             self._logger.debug(('Completed 1 step; environment = {}, ' +
                                 'parametrised_qs = {}')

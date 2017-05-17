@@ -76,7 +76,7 @@ def question3_lr_dr(num_runs=20, num_episodes=200, max_episode_step=20,
     return detailed_results, results
 
 
-def question3_epsilon(num_runs=20, num_episodes=200, max_episode_step=20,
+def question3_epsilon(num_runs=100, num_episodes=200, max_episode_step=20,
                       hr_environment=None, learning_rate=2, discount_rate=0.6,
                       trace_decay_rate=0.5):
     logger = getLogger('assignment.driver.q3.epsilon')
@@ -87,7 +87,7 @@ def question3_epsilon(num_runs=20, num_episodes=200, max_episode_step=20,
                          discount_rate=discount_rate,
                          trace_decay_rate=trace_decay_rate)
 
-    epsilons = np.arange(0.1, 1.0, 0.1)
+    epsilons = [0, 0.05, 0.1, 0.5, 1]
     curves = {}
     for (i, epsilon) in zip(range(len(epsilons)), epsilons):
         policy_partial = partial(EpsilonGreedy, epsilon=epsilon)

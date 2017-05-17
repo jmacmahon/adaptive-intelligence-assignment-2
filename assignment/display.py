@@ -30,3 +30,14 @@ def get_3d_tunings_figures(tunings, labels=None):
             ax.set_ylabel(labels[y_index])
         ax.plot_surface(*grid, z_values)
     return figures
+
+
+def get_epsilon_curves_figure(epsilon_curves):
+    fig, axes = plt.subplots(1, 1)
+    for (epsilon, curves) in epsilon_curves.items():
+        axes.errorbar(x=np.arange(curves['mean'].shape[0]),
+                      y=curves['mean'],
+                      yerr=curves['errorbars'],
+                      label='ε = {}'.format(epsilon))
+    axes.legend()
+    return fig

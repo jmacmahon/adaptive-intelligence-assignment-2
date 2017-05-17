@@ -27,22 +27,20 @@ basic_qs_partial = partial(BasicQs, initial_value=0,
 basic_qs_eligibility_partial = partial(BasicQsEligibilityTrace,
                                        initial_value=0, learning_rate=0.8,
                                        discount_rate=0.9, trace_decay_rate=0.5)
-nn_qs_partial = partial(NeuralQs, learning_rate=0.8, discount_rate=0.9)
+nn_qs_partial = partial(NeuralQs, learning_rate=2.0, discount_rate=0.6)
 nn_qs_eligibility_partial = partial(NeuralQsEligibility, learning_rate=2,
                                     discount_rate=0.6, trace_decay_rate=0.5)
 
 
-def question3(num_runs=20, num_episodes=200, max_episode_step=20,
-              hr_environment=None):
-    """Optimise learning rate, discount rate and epsilon"""
+def question3_lr_dr(num_runs=20, num_episodes=200, max_episode_step=20,
+                    hr_environment=None, epsilon=0.1, trace_decay_rate=0.5):
+    """Optimise learning rate, discount rate"""
 
-    logger = getLogger('assignment.driver.q3')
+    logger = getLogger('assignment.driver.q3.lr_dr')
 
     params = {
         'learning_rate': np.arange(0.2, 4, 0.4),
         'discount_rate': np.array([0.3, 0.5, 0.6, 0.7, 0.8, 0.9])
-        # 'epsilon': np.arange(0, 0.5, 0.1),
-        # 'trace_decay_rate': np.array([0.5]), #np.arange(0, 1, 0.2),
     }
 
     # TODO graph epsilon and trace_decay_rate
@@ -56,18 +54,17 @@ def question3(num_runs=20, num_episodes=200, max_episode_step=20,
     results = np.empty((total_combinations, len(params) + 1))
     for values in product(*params.values()):
         kwargs = dict(zip(params.keys(), values))
-        policy_partial = partial(EpsilonGreedy,
-                                 epsilon=0.1)
+        policy_partial = partial(EpsilonGreedy, epsilon=epsilon)
         qs_partial = partial(NeuralQsEligibility,
                              learning_rate=kwargs['learning_rate'],
                              discount_rate=kwargs['discount_rate'],
-                             trace_decay_rate=0.5)
+                             trace_decay_rate=trace_decay_rate)
         runs = SarsaMultipleRuns(num_runs, num_episodes, max_episode_step,
                                  hr_environment, policy_partial, qs_partial)
-        step_curve, _ = runs.run()
+        step_curves, _ = runs.run()
 
         # Weighted average steps
-        avg_curve = np.mean(step_curve, axis=0)
+        avg_curve = np.mean(step_curves, axis=0)
         evaluation_metric = np.sum(np.linspace(0, 1, num_episodes) * avg_curve)
         # evaluation_metric = np.sum(avg_curve[-100:])
 
@@ -77,6 +74,37 @@ def question3(num_runs=20, num_episodes=200, max_episode_step=20,
         logger.info('Evaluated parameter combination {} of {}; values = {}'
                     .format(i, total_combinations, values))
     return detailed_results, results
+
+
+def question3_epsilon(num_runs=20, num_episodes=200, max_episode_step=20,
+                      hr_environment=None, learning_rate=2, discount_rate=0.6,
+                      trace_decay_rate=0.5):
+    logger = getLogger('assignment.driver.q3.epsilon')
+
+    if hr_environment is None:
+        hr_environment = HomingRobot(10, 10, (5, 5), 10, 0)
+    qs_partial = partial(NeuralQsEligibility, learning_rate=learning_rate,
+                         discount_rate=discount_rate,
+                         trace_decay_rate=trace_decay_rate)
+
+    epsilons = np.arange(0.1, 1.0, 0.1)
+    curves = {}
+    for (i, epsilon) in zip(range(len(epsilons)), epsilons):
+        policy_partial = partial(EpsilonGreedy, epsilon=epsilon)
+        runs = SarsaMultipleRuns(num_runs, num_episodes, max_episode_step,
+                                 hr_environment, policy_partial, qs_partial)
+        step_curves, _ = runs.run()
+
+        mean_step_curve = np.mean(step_curves, axis=0)
+        errorbars_step_curve = (np.std(step_curves, axis=0) /
+                                np.sqrt(step_curves.shape[0]))
+        curves[epsilon] = {
+             'mean': mean_step_curve,
+             'errorbars': errorbars_step_curve
+        }
+        logger.info('Evaluated epsilon trial {} of {}; epsilon = {}'
+                     .format(i + 1, len(epsilons), epsilon))
+    return curves
 
 
 def question3_load_pickle(commit='362a88b'):

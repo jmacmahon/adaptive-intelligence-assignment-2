@@ -45,3 +45,14 @@ def get_epsilon_curves_figure(epsilon_curves):
                       label=label)
     axes.legend()
     return fig
+
+
+def get_tdr_curves_figure(tdr_curves):
+    fig, axes = plt.subplots(1, 1)
+    for (tdr, curves) in tdr_curves.items():
+        axes.errorbar(x=np.arange(curves['mean'].shape[0]),
+                      y=curves['mean'],
+                      yerr=curves['errorbars'],
+                      label='λ = {:.1}'.format(tdr))
+    axes.legend()
+    return fig

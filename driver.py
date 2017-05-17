@@ -118,6 +118,38 @@ def question3_epsilon(num_runs=1000, num_episodes=200, max_episode_step=20,
     return curves
 
 
+def question3_tdr(num_runs=1000, num_episodes=200, max_episode_step=20,
+                  hr_environment=None, learning_rate=2, discount_rate=0.6,
+                  epsilon=1):
+    logger = getLogger('assignment.driver.q3.epsilon')
+
+    if hr_environment is None:
+        hr_environment = HomingRobot(10, 10, (5, 5), 10, 0)
+    policy_partial = partial(EpsilonGreedyDecay, epsilon=epsilon)
+
+    trace_decay_rates = [0, 0.2, 0.4, 0.5, 0.7, 0.9]
+    curves = {}
+    for (i, trace_decay_rate) in zip(range(len(trace_decay_rates)),
+                                     trace_decay_rates):
+        qs_partial = partial(NeuralQsEligibility, learning_rate=learning_rate,
+                             discount_rate=discount_rate,
+                             trace_decay_rate=trace_decay_rate)
+        runs = SarsaMultipleRuns(num_runs, num_episodes, max_episode_step,
+                                 hr_environment, policy_partial, qs_partial)
+        step_curves, _ = runs.run()
+
+        mean_step_curve = np.mean(step_curves, axis=0)
+        errorbars_step_curve = (np.std(step_curves, axis=0) /
+                                np.sqrt(step_curves.shape[0]))
+        curves[trace_decay_rate] = {
+             'mean': mean_step_curve,
+             'errorbars': errorbars_step_curve
+        }
+        logger.info('Evaluated trace_decay_rate trial {} of {}; epsilon = {}'
+                    .format(i + 1, len(trace_decay_rates), trace_decay_rate))
+    return curves
+
+
 def question3_load_pickle(commit='362a88b'):
     with open('q3_results_{}.pickle'.format(commit), 'rb') as f:
         return load(f)

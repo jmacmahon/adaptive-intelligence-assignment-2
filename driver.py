@@ -32,8 +32,15 @@ nn_qs_eligibility_partial = partial(NeuralQsEligibility, learning_rate=2,
                                     discount_rate=0.6, trace_decay_rate=0.5)
 
 
-def question1_curves(num_episodes=200, max_episode_step=20,
-                     hr_environment=None, epsilon=0.5):
+# from https://stackoverflow.com/questions/14313510/how-to-calculate-moving-average-using-numpy
+def moving_average(a, n=3):
+    ret = np.cumsum(a, dtype=float)
+    ret[n:] = ret[n:] - ret[:-n]
+    return ret[n - 1:] / n
+
+
+def question1_single_curves(num_episodes=1000, max_episode_step=20,
+                            hr_environment=None, epsilon=0.001, avg_over=50):
     if hr_environment is None:
         hr_environment = HomingRobot(10, 10, (5, 5), 10, 0)
     egreedy_partial = partial(EpsilonGreedy, epsilon=epsilon)
@@ -41,16 +48,15 @@ def question1_curves(num_episodes=200, max_episode_step=20,
                                discount_rate=0.1)
     runs = SarsaMultipleRuns(100, num_episodes, max_episode_step,
                              hr_environment, egreedy_partial, basic_qs_partial)
-    yield runs
     run1 = runs.build_run()
     run2 = runs.build_run()
-    xs = np.arange(1, num_episodes + 1)
     step_curve_1, _ = run1.run()
     step_curve_2, _ = run2.run()
 
-    plt.plot(xs, step_curve_1)
-    plt.plot(xs, step_curve_2)
-    plt.show()
+    fig, (ax1, ax2) = plt.subplots(2, 1)
+    ax1.plot(moving_average(step_curve_1, n=avg_over))
+    ax2.plot(moving_average(step_curve_2, n=avg_over))
+    return fig
 
 
 def question3_lr_dr(num_runs=20, num_episodes=200, max_episode_step=20,

@@ -163,9 +163,9 @@ def image_monkey():
     return sarsa_runs
 
 
-def homing_robot():
+def homing_robot(num_runs=100):
     hr = HomingRobot(10, 10, (5, 5), 10, 0)
-    sarsa_runs = SarsaMultipleRuns(100, 200, 30, hr,
+    sarsa_runs = SarsaMultipleRuns(num_runs, 200, 30, hr,
                                    e_greedy_decay_policy_partial,
                                    nn_qs_eligibility_partial)
     return sarsa_runs

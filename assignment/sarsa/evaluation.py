@@ -17,7 +17,7 @@ class SarsaMultipleRuns(object):
         self._policy_partial = policy_partial
         self._parametrised_qs_partial = parametrised_qs_partial
 
-    def _run_one(self, run_index):
+    def build_run(self):
         num_states = self._environment.num_states
         num_actions = self._environment.num_actions
 
@@ -28,6 +28,10 @@ class SarsaMultipleRuns(object):
         episode = SarsaEpisode(self._environment, parametrised_qs, policy,
                                self._max_episode_step)
         run = SarsaRun(self._num_episodes, episode)
+        return run
+
+    def _run_one(self, run_index):
+        run = self.build_run()
         step_curve, reward_curve = run.run()
         self._logger.info('Completed run {} of {}'
                           .format(run_index + 1, self._num_runs))

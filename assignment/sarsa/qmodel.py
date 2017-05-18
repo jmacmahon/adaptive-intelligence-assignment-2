@@ -20,7 +20,7 @@ class QModel(object):
 
     @property
     def qs(self):
-        raise NotADirectoryError()
+        raise NotImplementedError()
 
 
 class BasicQs(QModel):
@@ -106,6 +106,10 @@ class NeuralQs(QModel):
         self._weights += selector * dw
 
         self._logger.debug('Updated weights; dw = {}'.format(dw))
+
+    @property
+    def qs(self):
+        return self._weights
 
 
 class NeuralQsEligibility(NeuralQs):

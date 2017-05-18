@@ -1,0 +1,87 @@
+\NeedsTeXFormat{LaTeX2e}
+
+\ProvidesPackage{default}
+
+\relax
+
+% Set page dimensions and other appearence aspects.
+\usepackage[scale=0.8]{geometry}
+\usepackage{hyperref, ifxetex}
+\usepackage[table,hyperref]{xcolor}
+\usepackage[british]{babel}
+\hypersetup{colorlinks=true,allcolors=magenta}
+
+% XeTeX font extensions.
+\ifxetex
+\usepackage{fontspec}
+\setmonofont[Scale=0.8]{Droid Sans Mono}
+\fi
+
+% Pretty and clickable links.
+\usepackage{hyperref}
+% Compact lists
+\usepackage{mdwlist}
+% Floats
+\usepackage{float}
+
+% Headers and footers
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\let\oldtitle\title
+\renewcommand{\sectionmark}[1]{\markboth{\thesection.\ #1}{}}
+
+% Maths stuff.
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.14}
+
+% Logic operators
+\newcommand{\Implies}{\Rightarrow}
+\newcommand{\Iff}{\Leftrightarrow}
+\renewcommand{\implies}{\rightarrow}
+\renewcommand{\iff}{\leftrightarrow}
+
+% Code stuff.
+\usepackage[final]{listings}
+
+% Define some settins for Haskell code listings.
+\lstdefinestyle{haskell}{
+  belowcaptionskip=1\baselineskip,
+  breaklines=true,
+  frame=L,
+  xleftmargin=\parindent,
+  language=Haskell,
+  showstringspaces=false,
+  basicstyle=\ttfamily,
+  keywordstyle=\bfseries\color{green!40!black},
+  commentstyle=\itshape\color{purple!40!black},
+  identifierstyle=\color{blue},
+  stringstyle=\color{orange},
+}
+
+\lstdefinestyle{python}{
+  language=Python,
+  belowcaptionskip=1\baselineskip,
+  breaklines=true,
+  frame=L,
+  xleftmargin=\parindent,
+  showstringspaces=false,
+  basicstyle=\ttfamily,
+  % keywordstyle=\bfseries\color{green!40!black},
+  % commentstyle=\itshape\color{purple!40!black},
+  % identifierstyle=\color{blue},
+  % stringstyle=\color{orange},
+}
+
+
+\newcommand{\CC}{\mathbb{C}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\QQ}{\mathbb{Q}}
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\NN}{\mathbb{N}}
+
+\newcommand{\st}{\text{ s.t. }}
+\newcommand{\inv}{^{-1}}
+\newcommand{\inmod}[1]{\text{ (mod } #1 \text{)}}
+\newcommand{\hcf}[2]{\textbf{hcf}({#1}, {#2})}
+\newcommand{\Mat}[2]{\textbf{Mat}_{#1}(#2)}

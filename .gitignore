@@ -1,3 +1,9 @@
+# LaTeX / XeTeX
+*.aux
+*.pdf
+*.out
+*.dvi
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

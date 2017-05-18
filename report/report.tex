@@ -1,0 +1,73 @@
+% !TEX TS-program = xelatex
+% !TEX encoding = UTF-8
+
+\documentclass[a4paper, 11pt, twocolumn, draft]{article} % use larger type; default would be 10pt
+
+\usepackage{default}
+
+\defaultfontfeatures{Mapping=tex-text}
+\setmainfont[Ligatures=TeX]{Linux Libertine}
+
+% \usepackage[parfill]{parskip} % Activate to begin paragraphs with an empty line rather than an indent
+
+\usepackage{graphicx} % support the \includegraphics command and options
+\usepackage{bm}
+
+\title{Reinforcement learning with TD(λ) and a Neural Network}
+\author{Student 120133998, University of Sheffield}
+\date{\today}
+
+\begin{document}
+
+\twocolumn[{
+  \begin{@twocolumnfalse}
+    \maketitle
+    \begin{abstract}
+
+    This report outlines our investigations into the reinforcement learning
+    problem by using an example `homing' problem.  We apply the TD algorithm and
+    use an artificial neural network to learn Q-values, and then implement
+    various extensions to the TD algorithm.  We compare these extensions success
+    at learning the homing problem and tune their parameters.
+
+    \end{abstract}
+  \end{@twocolumnfalse}
+}]
+
+\section{}
+
+\begin{thebibliography}{9}
+
+\end{thebibliography}
+
+\onecolumn \appendix
+
+\section{Tables}
+\begin{table}
+  \centering
+  \begin{tabular}{r | c c c c c c c c c c}
+    \hline
+      & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 \\
+    \hline
+    0 & → & ↓ & ↓ & ↓ & → & ↓ & ↓ & ← & ← & ↓ \\
+    1 & ↓ & ↓ & ↓ & ↓ & ↓ & ↓ & ↓ & ← & ↓ & ↓ \\
+    2 & ↓ & ↓ & ↓ & ↓ & ↓ & ↓ & ↓ & ↓ & ← & ↓ \\
+    3 & ↓ & → & ↓ & ← & ↓ & → & ↓ & ← & ↓ & ↓ \\
+    4 & ↓ & ↓ & → & ↓ & ↓ & ↓ & ↓ & ↓ & ← & ← \\
+    5 & → & → & → & → & → & \colorbox{pink}{↓} & ← & ← & ↑ & ← \\
+    6 & ↑ & → & → & ↑ & ↑ & ↑ & ↑ & ↑ & ← & ← \\
+    7 & → & → & ↑ & ← & ↑ & → & ↑ & ← & ← & ← \\
+    8 & → & ↑ & ↑ & → & → & → & ↑ & ↑ & ← & ↑ \\
+    9 & ↑ & ↑ & ↑ & → & ↑ & ↑ & ↑ & ← & ↑ & ↑ \\
+    \hline
+  \end{tabular}
+  \caption{Directions}
+  \label{tab:computed_directions}
+\end{table}
+
+\section{Code snippets} \label{sec:code}
+
+\end{document}
+% Disable intented paragraphs and add space between them instead.
+% \setlength{\parskip}{10pt}
+% \setlength{\parindent}{0pt

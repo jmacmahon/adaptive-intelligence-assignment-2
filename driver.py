@@ -32,6 +32,27 @@ nn_qs_eligibility_partial = partial(NeuralQsEligibility, learning_rate=2,
                                     discount_rate=0.6, trace_decay_rate=0.5)
 
 
+def question1_curves(num_episodes=200, max_episode_step=20,
+                     hr_environment=None, epsilon=0.5):
+    if hr_environment is None:
+        hr_environment = HomingRobot(10, 10, (5, 5), 10, 0)
+    egreedy_partial = partial(EpsilonGreedy, epsilon=epsilon)
+    basic_qs_partial = partial(BasicQs, initial_value=0, learning_rate=0.1,
+                               discount_rate=0.1)
+    runs = SarsaMultipleRuns(100, num_episodes, max_episode_step,
+                             hr_environment, egreedy_partial, basic_qs_partial)
+    yield runs
+    run1 = runs.build_run()
+    run2 = runs.build_run()
+    xs = np.arange(1, num_episodes + 1)
+    step_curve_1, _ = run1.run()
+    step_curve_2, _ = run2.run()
+
+    plt.plot(xs, step_curve_1)
+    plt.plot(xs, step_curve_2)
+    plt.show()
+
+
 def question3_lr_dr(num_runs=20, num_episodes=200, max_episode_step=20,
                     hr_environment=None, epsilon=0.1, trace_decay_rate=0.5):
     """Optimise learning rate, discount rate"""

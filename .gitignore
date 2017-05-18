@@ -3,6 +3,12 @@
 *.pdf
 *.out
 *.dvi
+*.toc
+
+# BibTeX
+*.bbl
+*.blg
+*.dbj
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

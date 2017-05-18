@@ -25,20 +25,91 @@
     \begin{abstract}
 
     This report outlines our investigations into the reinforcement learning
-    problem by using an example `homing' problem.  We apply the TD algorithm and
+    problem by using an example `homing' task.  We apply the Sarsa algorithm and
     use an artificial neural network to learn Q-values, and then implement
-    various extensions to the TD algorithm.  We compare these extensions success
-    at learning the homing problem and tune their parameters.
+    various extensions to the Sarsa algorithm including TD(λ).  We compare these
+    extensions success at learning the homing problem and tune their parameters.
 
     \end{abstract}
+    \tableofcontents
+    \vspace{20pt}
   \end{@twocolumnfalse}
 }]
 
-\section{}
+\section{Introduction} .
 
-\begin{thebibliography}{9}
+\section{Homing task} The task we chose to focus on was a simple goal-oriented
+`homing' task: a robot is placed in a room at random, and has to make its way to
+the charging station, which is at a fixed place in the room.  We modelled this
+using a grid of $10\times10$ discrete positions, with the robot able to move in
+the four compass directions in a single action, and its charging station placed
+at position $(5, 5)$.
 
-\end{thebibliography}
+Each episode\footnote{Note that we choose to use the terminology of `episodes'
+rather than `trials', as in \cite{Sutton1998}.} consists of the robot making
+moves according to its policy $\pi$ until either a maximum number of moves (here
+denoted $t_{max}$) is reached, or it reaches its charging station at $(5, 5)$.
+
+\section{Basic Sarsa algorithm} At first, we implement a basic TD algorithm, as
+outlined in \cite[Chapter~6]{Sutton1998} with an $\epsilon$-greedy policy.  We
+follow their definition of `discounted return' (denoted $R_t$) as the sum of
+expected rewards (denoted $r_t$) to be obtained under policy $\pi$, with each
+future reward being geometrically discounted by a factor of $\gamma$, i.e.s
+\begin{align}
+R_t &= r_t + \gamma r_{t+1} + \gamma^2 r_{t+2} + \ldots \nonumber \\
+\text{or } R_t &= \sum_{i=0}^{\infty}{\gamma^ir_{t+i}} \\
+&\text{where }0 \le \gamma < 1 \nonumber
+\end{align}
+
+(Note that we may relax the restriction to $0 \le \gamma \le 1$ if we know that
+the sequence ($t_n$) eventually becomes 0.)
+
+The `Q-value' of a particular state-action pair, denoted $Q^\pi(s, a)$ is the
+expected discounted return after taking action $a$ when in state $s$ and
+following policy $\pi$ thereafter.  The Sarsa algorithm attempts to solve the
+reinforcement learning problem by estimating and refining these Q-values over
+every step of a training episode; we will omit the bulk of the algorithm here
+(it can be found at \cite[p.~146]{Sutton1998}), but note that the crucial step
+is in updating the Q-values\footnote{This is given in a slightly different form
+in \cite{Sutton1998}, but I feel this was is more demonstrative of a weighted
+average of the current and `target' values.}:
+\begin{equation}
+Q(s, a) \leftarrow (1-\alpha)Q(s, a) + \alpha[r + \gamma Q(s', a')]
+\end{equation}
+
+$Q(s, a)$ can either be used and estimated directly, or can be generated from
+some parametrised model.  Our basic approach estimates directly, but then in
+\autoref{sec:ext_nn} we extend this model with an artificial neural network.
+
+As for selecting an action, we used the $\epsilon$-greedy policy throughout this
+investigation:\footnote{Although we tried implementing a softmax policy with a
+Gibbs-Boltzmann distribution, we tended to agree with Sutton \& Barto that
+estimating a good value for $\tau$ was difficult, and in any case the algorithm
+seemed to perform poorly with this method.}  With probability $(1-\epsilon)$ we
+select the action with the best Q-value, as estimated by Sarsa, and with
+proability $\epsilon$ we choose randomly between the actions.  This allows a
+certain degree of `exploring' while maintaining a general stability.
+
+\section{Learning curves and evaluation} .
+
+\section{Extensions} .
+
+\subsection{Decaying $\epsilon$} .
+
+\subsection{Neural network} \label{sec:ext_nn} .
+
+\subsection{Eligibility trace (TD(λ))} .
+
+\subsection{Extended actions} .
+
+\section{Parameter tuning} .
+
+\subsection{Representation of weights} .
+
+\section{Limits of the model} .
+
+\bibliographystyle{IEEEtran}
+\bibliography{report}
 
 \onecolumn \appendix
 

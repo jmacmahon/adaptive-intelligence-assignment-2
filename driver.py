@@ -89,6 +89,51 @@ def question1_avg_curve(num_runs=100, num_episodes=1000, max_episode_step=20,
     step_axes.set_ylabel('Steps taken to goal')
     plt.show()
 
+
+def nn_basic_comparison(num_runs=100, num_episodes=1000, max_episode_step=20,
+                        epsilon=0.2):
+    egreedy_partial = partial(EpsilonGreedy, epsilon=epsilon)
+    basic_qs_partial = partial(BasicQs, initial_value=0, learning_rate=0.8,
+                               discount_rate=0.6)
+    nn_qs_partial = partial(NeuralQs, learning_rate=0.8, discount_rate=0.6)
+    basic_runs = SarsaMultipleRuns(num_runs, num_episodes, max_episode_step,
+                                   hr_environment, egreedy_partial,
+                                   basic_qs_partial)
+    nn_runs = SarsaMultipleRuns(num_runs, num_episodes, max_episode_step,
+                                hr_environment, egreedy_partial,
+                                nn_qs_partial)
+    step_curves_basic, _ = basic_runs.run()
+    step_curves_nn, _ = nn_runs.run()
+
+    xs = np.arange(step_curves_nn.shape[1])
+
+    step_curves_basic = step_curves_basic[:, ::10]
+    step_curves_nn = step_curves_nn[:, ::10]
+    xs = xs[::10]
+
+    mean_step_curve_basic = np.mean(step_curves_basic, axis=0)
+    errorbars_step_curve_basic = (np.std(step_curves_basic, axis=0) /
+                                  np.sqrt(step_curves_basic.shape[0]))
+
+
+    mean_step_curve_nn = np.mean(step_curves_nn, axis=0)
+    errorbars_step_curve_nn = (np.std(step_curves_nn, axis=0) /
+                               np.sqrt(step_curves_nn.shape[0]))
+
+    fig, axes = plt.subplots(1, 1)
+    axes.errorbar(x=xs,
+                  y=mean_step_curve_basic,
+                  yerr=errorbars_step_curve_basic,
+                  label='Basic model')
+    axes.errorbar(x=xs,
+                  y=mean_step_curve_nn,
+                  yerr=errorbars_step_curve_nn,
+                  label='Neural Network model')
+    axes.set_xlabel('Episode number')
+    axes.set_ylabel('Steps taken to goal')
+    axes.legend()
+    plt.show()
+
 def question3_lr_dr(num_runs=20, num_episodes=200, max_episode_step=20,
                     epsilon=0.1, trace_decay_rate=0.5):
     """Optimise learning rate, discount rate"""

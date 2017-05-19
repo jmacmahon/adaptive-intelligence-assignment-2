@@ -81,7 +81,7 @@ def nn_basic_eligibility_comparison(*args, epsilon=0.2, **kwargs):
                        learning_rate=learning_rate,
                        discount_rate=discount_rate,
                        trace_decay_rate=trace_decay_rate),
-         'label': 'Basic model with λ'},
+         'label': 'Basic model with λ = {}'.format(trace_decay_rate)},
         {'policy': egreedy_partial,
          'qs': partial(NeuralQs, learning_rate=learning_rate,
                        discount_rate=discount_rate),
@@ -90,7 +90,7 @@ def nn_basic_eligibility_comparison(*args, epsilon=0.2, **kwargs):
          'qs': partial(NeuralQsEligibility, learning_rate=learning_rate,
                        discount_rate=discount_rate,
                        trace_decay_rate=trace_decay_rate),
-         'label': 'ANN model with λ'}
+         'label': 'ANN model with λ = {}'.format(trace_decay_rate)}
     ]
     return compare(models, *args, **kwargs)
 
@@ -167,7 +167,8 @@ def question3_lr_dr(num_runs=20, num_episodes=200, max_episode_step=20,
 
 
 def question3_epsilon(*args, **kwargs):
-    qs_partial = partial(NeuralQs, learning_rate=2, discount_rate=0.6)
+    qs_partial = partial(NeuralQsEligibility, learning_rate=0.8,
+                         discount_rate=0.6, trace_decay_rate=0.5)
 
     epsilons = [(0, False),
                 (0.05, False),

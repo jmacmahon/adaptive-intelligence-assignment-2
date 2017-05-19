@@ -211,10 +211,10 @@ learning curves.
       N/A & No \\
     \autoref{fig:q1_avg} & 100 & 1000 & 20 & No & 0.001 & 0.1 & 0.1 & No &
       N/A & No \\
-    \autoref{fig:ext_basic_vs_nn} (Basic) & 100 & 1000 & 20 & No & 0.2 & 0.8 &
-      0.6 & No & N/A & No \\
-    \autoref{fig:ext_basic_vs_nn} (NN) & 100 & 1000 & 20 & No & 0.2 & 0.8 &
-      0.6 & No & N/A & Yes \\
+    \autoref{fig:ext_basic_vs_nn_vs_eligibility} & 200 & 200 & 20 & No & 0.2
+      & 0.8 & 0.6 & $*$ & $*$ & No \\
+    \autoref{fig:ext_epsilon_vs_decay} & 100 & 200 & 20 & $*$ & $*$ & 0.8 & 0.6
+      & No & N/A & Yes \\
     \hline
   \end{tabular}
   \caption{Parameters for figures generated.}
@@ -233,6 +233,7 @@ learning curves.
   \item `Trace?' denotes whether an eligibility trace was used
   \item $\lambda$ is the trace decay rate
   \item `ANN?' denotes whether an artificial neural network was used
+  \item $*$ is used when parameter varies within the figure
 \end{itemize*}
 
 \begin{table}[H]

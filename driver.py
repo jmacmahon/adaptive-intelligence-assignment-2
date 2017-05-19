@@ -22,17 +22,6 @@ coloredlogs.install(level='INFO', logger=getLogger('assignment.driver'))
 
 hr_environment = HomingRobot(10, 10, (5, 5), 10, 0)
 
-e_greedy_decay_policy_partial = partial(EpsilonGreedyDecay, epsilon=0.5)
-e_greedy_policy_partial = partial(EpsilonGreedyDecay, epsilon=0.1)
-basic_qs_partial = partial(BasicQs, initial_value=0,
-                           learning_rate=0.8, discount_rate=0.9)
-basic_qs_eligibility_partial = partial(BasicQsEligibilityTrace,
-                                       initial_value=0, learning_rate=0.8,
-                                       discount_rate=0.9, trace_decay_rate=0.5)
-nn_qs_partial = partial(NeuralQs, learning_rate=2.0, discount_rate=0.6)
-nn_qs_eligibility_partial = partial(NeuralQsEligibility, learning_rate=2,
-                                    discount_rate=0.6, trace_decay_rate=0.5)
-
 
 # from https://stackoverflow.com/questions/14313510/how-to-calculate-moving-average-using-numpy
 def moving_average(a, n=3):
@@ -63,123 +52,79 @@ def question1_single_curves(num_episodes=1000, max_episode_step=20,
     return fig
 
 
-def question1_avg_curve(num_runs=100, num_episodes=1000, max_episode_step=20,
-                        epsilon=0.001, avg_over=50):
+def question1_avg_curve(*args, epsilon=0.001, **kwargs):
     egreedy_partial = partial(EpsilonGreedy, epsilon=epsilon)
     basic_qs_partial = partial(BasicQs, initial_value=0, learning_rate=0.1,
                                discount_rate=0.1)
-    runs = SarsaMultipleRuns(num_runs, num_episodes, max_episode_step,
-                             hr_environment, egreedy_partial, basic_qs_partial)
+    models = [
+        {'policy': egreedy_partial,
+         'qs': basic_qs_partial,
+         'label': 'Averaged learning curve'}
+    ]
 
-    step_curves, _ = runs.run(NUM_PROCESSES)
-    xs = np.arange(step_curves.shape[1])
-
-    step_curves = step_curves[:, ::10]
-    xs = xs[::10]
-
-    mean_step_curve = np.mean(step_curves, axis=0)
-    errorbars_step_curve = (np.std(step_curves, axis=0) /
-                            np.sqrt(step_curves.shape[0]))
-
-    fig, step_axes = plt.subplots(1, 1)
-    step_axes.errorbar(x=xs,
-                       y=mean_step_curve,
-                       yerr=errorbars_step_curve)
-    step_axes.set_xlabel('Episode number')
-    step_axes.set_ylabel('Steps taken to goal')
-    plt.show()
+    compare(models)
 
 
-def nn_basic_comparison(num_runs=100, num_episodes=1000, max_episode_step=20,
-                        epsilon=0.2):
+def nn_basic_eligibility_comparison(*args, epsilon=0.2, **kwargs):
     egreedy_partial = partial(EpsilonGreedy, epsilon=epsilon)
-    basic_qs_partial = partial(BasicQs, initial_value=0, learning_rate=0.8,
-                               discount_rate=0.6)
-    nn_qs_partial = partial(NeuralQs, learning_rate=0.8, discount_rate=0.6)
-    basic_runs = SarsaMultipleRuns(num_runs, num_episodes, max_episode_step,
-                                   hr_environment, egreedy_partial,
-                                   basic_qs_partial)
-    nn_runs = SarsaMultipleRuns(num_runs, num_episodes, max_episode_step,
-                                hr_environment, egreedy_partial,
-                                nn_qs_partial)
-    step_curves_basic, _ = basic_runs.run()
-    step_curves_nn, _ = nn_runs.run()
+    learning_rate = 0.8
+    discount_rate = 0.6
+    trace_decay_rate = 0.5
 
-    xs = np.arange(step_curves_nn.shape[1])
+    models = [
+       {'policy': egreedy_partial,
+        'qs': partial(BasicQs, initial_value=0, learning_rate=learning_rate,
+                      discount_rate=discount_rate),
+        'label': 'Basic model without λ'},
+        {'policy': egreedy_partial,
+         'qs': partial(BasicQsEligibilityTrace, initial_value=0,
+                       learning_rate=learning_rate,
+                       discount_rate=discount_rate,
+                       trace_decay_rate=trace_decay_rate),
+         'label': 'Basic model with λ'},
+        {'policy': egreedy_partial,
+         'qs': partial(NeuralQs, learning_rate=learning_rate,
+                       discount_rate=discount_rate),
+         'label': 'ANN model without λ'},
+        {'policy': egreedy_partial,
+         'qs': partial(NeuralQsEligibility, learning_rate=learning_rate,
+                       discount_rate=discount_rate,
+                       trace_decay_rate=trace_decay_rate),
+         'label': 'ANN model with λ'}
+    ]
+    return compare(models, *args, **kwargs)
 
-    step_curves_basic = step_curves_basic[:, ::10]
-    step_curves_nn = step_curves_nn[:, ::10]
-    xs = xs[::10]
 
-    mean_step_curve_basic = np.mean(step_curves_basic, axis=0)
-    errorbars_step_curve_basic = (np.std(step_curves_basic, axis=0) /
-                                  np.sqrt(step_curves_basic.shape[0]))
+def compare(models, num_runs=100, num_episodes=1000, max_episode_step=20,
+            graph_step=10):
+    logger = getLogger('assignment.driver.compare')
 
-
-    mean_step_curve_nn = np.mean(step_curves_nn, axis=0)
-    errorbars_step_curve_nn = (np.std(step_curves_nn, axis=0) /
-                               np.sqrt(step_curves_nn.shape[0]))
-
+    xs = np.arange(num_episodes)[::graph_step]
     fig, axes = plt.subplots(1, 1)
-    axes.errorbar(x=xs,
-                  y=mean_step_curve_basic,
-                  yerr=errorbars_step_curve_basic,
-                  label='Basic model')
-    axes.errorbar(x=xs,
-                  y=mean_step_curve_nn,
-                  yerr=errorbars_step_curve_nn,
-                  label='Neural Network model')
-    axes.set_xlabel('Episode number')
-    axes.set_ylabel('Steps taken to goal')
+    ii = 0
+    for model in models:
+        ii += 1
+        runs = SarsaMultipleRuns(num_runs, num_episodes, max_episode_step,
+                                 hr_environment, model['policy'], model['qs'])
+        step_curves, _ = runs.run()
+        step_curves = step_curves[:, ::graph_step]
+
+        mean_step_curve = np.mean(step_curves, axis=0)
+        errorbars_step_curve = (np.std(step_curves, axis=0) /
+                                np.sqrt(step_curves.shape[0]))
+
+        axes.errorbar(x=xs,
+                      y=mean_step_curve,
+                      yerr=errorbars_step_curve,
+                      label=model['label'])
+        axes.set_xlabel('Episode number')
+        axes.set_ylabel('Steps taken to goal')
+
+        logger.info('Done model {} of {}: {}'
+                    .format(ii, len(models), model['label']))
     axes.legend()
     plt.show()
 
-
-def nn_basic_eligibility_comparison(num_runs=100, num_episodes=1000,
-                                    max_episode_step=20, epsilon=0.2):
-    egreedy_partial = partial(EpsilonGreedy, epsilon=epsilon)
-    basic_qs_partial = partial(BasicQsEligibilityTrace, initial_value=0,
-                               learning_rate=0.8, discount_rate=0.6,
-                               trace_decay_rate=0.5)
-    nn_qs_partial = partial(NeuralQsEligibility, learning_rate=0.8,
-                            discount_rate=0.6, trace_decay_rate=0.5)
-    basic_runs = SarsaMultipleRuns(num_runs, num_episodes, max_episode_step,
-                                   hr_environment, egreedy_partial,
-                                   basic_qs_partial)
-    nn_runs = SarsaMultipleRuns(num_runs, num_episodes, max_episode_step,
-                                hr_environment, egreedy_partial,
-                                nn_qs_partial)
-    step_curves_basic, _ = basic_runs.run()
-    step_curves_nn, _ = nn_runs.run()
-
-    xs = np.arange(step_curves_nn.shape[1])
-
-    step_curves_basic = step_curves_basic[:, ::10]
-    step_curves_nn = step_curves_nn[:, ::10]
-    xs = xs[::10]
-
-    mean_step_curve_basic = np.mean(step_curves_basic, axis=0)
-    errorbars_step_curve_basic = (np.std(step_curves_basic, axis=0) /
-                                  np.sqrt(step_curves_basic.shape[0]))
-
-
-    mean_step_curve_nn = np.mean(step_curves_nn, axis=0)
-    errorbars_step_curve_nn = (np.std(step_curves_nn, axis=0) /
-                               np.sqrt(step_curves_nn.shape[0]))
-
-    fig, axes = plt.subplots(1, 1)
-    axes.errorbar(x=xs,
-                  y=mean_step_curve_basic,
-                  yerr=errorbars_step_curve_basic,
-                  label='Basic model with λ')
-    axes.errorbar(x=xs,
-                  y=mean_step_curve_nn,
-                  yerr=errorbars_step_curve_nn,
-                  label='Neural Network model with λ')
-    axes.set_xlabel('Episode number')
-    axes.set_ylabel('Steps taken to goal')
-    axes.legend()
-    plt.show()
 
 def question3_lr_dr(num_runs=20, num_episodes=200, max_episode_step=20,
                     epsilon=0.1, trace_decay_rate=0.5):

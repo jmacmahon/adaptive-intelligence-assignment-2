@@ -144,8 +144,9 @@ extensions.
 The synapse weights are adjusted as per the above Sarsa rule for adjusting the
 Q-values.  Comparing this method with the basic method at first sight gives
 disappointing results---the ANN-backed model actually performs substantially
-worse than the basic model above (see \autoref{fig:ext_basic_vs_nn}).  However,
-as we will see, when an eligibility trace is added this situation is reversed.
+worse than the basic model above (see
+\autoref{fig:ext_basic_vs_nn_vs_eligibility}).  However, as we will see, when an
+eligibility trace is added this situation is reversed.
 
 \subsection{Eligibility trace (TD(λ))} Whereas the standard Sarsa algorithm
 updates each value of $Q(s, a)$ for $s = s_t$ and for all $a \in \mathcal{A}_s$
@@ -157,21 +158,33 @@ it becomes known as Sarsa(λ).
 
 As suggested by the assignment brief, we implemented an eligibility trace to
 both our basic model and our ANN-backed model.  The results were successful, as
-can be seen in
+can be seen again in \autoref{fig:ext_basic_vs_nn_vs_eligibility}.\footnote{This
+answers question 2.}
 
 \begin{figure}
-  \includegraphics[width=0.49\textwidth]{figures/basic_vs_nn.png}
-  \caption{Learning curves for the basic model vs. ANN model}
-  \label{fig:ext_basic_vs_nn}
+  \includegraphics[width=0.49\textwidth]{figures/basic_vs_nn_vs_eligibility.png}
+  \caption{Learning curves for the basic model vs. ANN model vs. using an
+  eligibility trace.}
+  \label{fig:ext_basic_vs_nn_vs_eligibility}
 \end{figure}
 
-\subsection{Decaying $\epsilon$} The first extension we implement is simply
+\subsection{Decaying $\epsilon$} Another extension we implement is simply
 letting the value of $\epsilon$ in the $\epsilon$-greedy policy decay over time.
 We establish a rule, with $n$ being the episode number in the run, of
 \begin{equation}
   \epsilon_n = \frac{\epsilon_0}{n}
 \end{equation}
-where $\epsilon_0$ is a parameter for the initial value of $\epsilon$.
+where $\epsilon_0$ is a parameter for the initial value of $\epsilon$.  As can
+be seen in \autoref{fig:ext_epsilon_vs_decay}, this made little impact on the
+learning curves.
+
+
+\begin{figure}
+  \includegraphics[width=0.49\textwidth]{figures/epsilon_decay.png}
+  \caption{Learning curves for the $\epsilon$-greedy policy; plain vs. decaying
+  $\epsilon$}
+  \label{fig:ext_epsilon_vs_decay}
+\end{figure}
 
 \subsection{Extended actions} .
 

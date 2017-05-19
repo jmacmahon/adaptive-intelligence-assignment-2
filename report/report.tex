@@ -1,7 +1,7 @@
 % !TEX TS-program = xelatex
 % !TEX encoding = UTF-8
 
-\documentclass[a4paper, 11pt, twocolumn, draft]{article} % use larger type; default would be 10pt
+\documentclass[a4paper, 11pt, twocolumn, final]{article} % use larger type; default would be 10pt
 
 \usepackage{default}
 
@@ -18,7 +18,7 @@
 \counterwithin{figure}{section}
 \counterwithin{equation}{section}
 
-\title{Reinforcement learning with TD(λ) and a Neural Network}
+\title{Reinforcement learning with Sarsa, Sarsa(λ) and a Neural Network}
 \author{Student 120133998, University of Sheffield}
 \date{\today}
 
@@ -32,8 +32,9 @@
     This report outlines our investigations into the reinforcement learning
     problem by using an example `homing' task.  We apply the Sarsa algorithm and
     use an artificial neural network to learn Q-values, and then implement
-    various extensions to the Sarsa algorithm including TD(λ).  We compare these
-    extensions success at learning the homing problem and tune their parameters.
+    various extensions to the Sarsa algorithm including Sarsa(λ).  We compare
+    these extensions success at learning the homing problem and tune their
+    parameters.
 
     \end{abstract}
     \tableofcontents
@@ -51,11 +52,12 @@ the four compass directions in a single action, and its charging station placed
 at position $(5, 5)$.
 
 Each episode\footnote{Note that we choose to use the terminology of `episodes'
-rather than `trials', as in \cite{Sutton1998}.} consists of the robot making
-moves according to its policy $\pi$ until either a maximum number of moves (here
-denoted $t_{max}$) is reached, or it reaches its charging station at $(5, 5)$.
+rather than `trials', as in \cite[p.~58]{Sutton1998}.} consists of the robot
+making moves according to its policy $\pi$ until either a maximum number of
+moves (here denoted $t_{max}$) is reached, or it reaches its charging station at
+$(5, 5)$.
 
-\section{Basic Sarsa algorithm} At first, we implement a basic TD algorithm, as
+\section{Basic Sarsa algorithm} At first, we implement a basic Sarsa algorithm, as
 outlined in \cite[Chapter~6]{Sutton1998} with an $\epsilon$-greedy policy.  We
 follow their definition of `discounted return' (denoted $R_t$) as the sum of
 expected rewards (denoted $r_t$) to be obtained under policy $\pi$, with each
@@ -89,11 +91,12 @@ some parametrised model.  Our basic approach estimates directly, but then in
 As for selecting an action, we used the $\epsilon$-greedy policy throughout this
 investigation:\footnote{Although we tried implementing a softmax policy with a
 Gibbs-Boltzmann distribution, we tended to agree with Sutton \& Barto that
-estimating a good value for $\tau$ was difficult, and in any case the algorithm
-seemed to perform poorly with this method.}  With probability $(1-\epsilon)$ we
-select the action with the best Q-value, as estimated by Sarsa, and with
-proability $\epsilon$ we choose randomly between the actions.  This allows a
-certain degree of `exploring' while maintaining a general stability.
+estimating a good value for $\tau$ was difficult \cite[p.~31]{Sutton1998}, and
+in any case the algorithm seemed to perform poorly with this method.}  With
+probability $(1-\epsilon)$ we select the action with the best Q-value, as
+estimated by Sarsa, and with proability $\epsilon$ we choose randomly between
+the actions.  This allows a certain degree of `exploring' while maintaining a
+general stability.
 
 \section{Learning curves and evaluation} Before moving on to a more in-depth
 discussion, we briefly define the term `learning curve': in the context of our
@@ -128,13 +131,47 @@ curves.\footnote{This answers Question 1.}
   \label{fig:q1_avg}
 \end{figure}
 
-\section{Extensions} .
+\section{Extensions} In this section, we attempt to build on our established
+Sarsa model with various extensions, including using an artificial neural
+network (abbreviated as ANN hereafter) to generate Q-values.  Since using an ANN
+was suggested in the assignment brief, we use the above basic learning model
+\textbf{with} the ANN as our baseline against which we will measure the other
+extensions.
 
-\subsection{Decaying $\epsilon$} .
+\subsection{Neural network} \label{sec:ext_nn} For our ANN, we use a simple
+1-layer model with no hidden neurons, where there is one input neuron per state
+(i.e. per position in the room), and one output neuron for each action to take.
+The synapse weights are adjusted as per the above Sarsa rule for adjusting the
+Q-values.  Comparing this method with the basic method at first sight gives
+disappointing results---the ANN-backed model actually performs substantially
+worse than the basic model above (see \autoref{fig:ext_basic_vs_nn}).  However,
+as we will see, when an eligibility trace is added this situation is reversed.
 
-\subsection{Neural network} \label{sec:ext_nn} .
+\subsection{Eligibility trace (TD(λ))} Whereas the standard Sarsa algorithm
+updates each value of $Q(s, a)$ for $s = s_t$ and for all $a \in \mathcal{A}_s$
+only to be closer to the `target' value of $r + \gamma Q(s', a')$, if we add an
+eligibility trace to this, the Q-values for \textit{all} states are adjusted
+similarly, but in proportion to the time they were most recently visited (i.e.
+their `eligibility').  When an eligibility trace is added to Sarsa in this way,
+it becomes known as Sarsa(λ).
 
-\subsection{Eligibility trace (TD(λ))} .
+As suggested by the assignment brief, we implemented an eligibility trace to
+both our basic model and our ANN-backed model.  The results were successful, as
+can be seen in
+
+\begin{figure}
+  \includegraphics[width=0.49\textwidth]{figures/basic_vs_nn.png}
+  \caption{Learning curves for the basic model vs. ANN model}
+  \label{fig:ext_basic_vs_nn}
+\end{figure}
+
+\subsection{Decaying $\epsilon$} The first extension we implement is simply
+letting the value of $\epsilon$ in the $\epsilon$-greedy policy decay over time.
+We establish a rule, with $n$ being the episode number in the run, of
+\begin{equation}
+  \epsilon_n = \frac{\epsilon_0}{n}
+\end{equation}
+where $\epsilon_0$ is a parameter for the initial value of $\epsilon$.
 
 \subsection{Extended actions} .
 
@@ -161,6 +198,10 @@ curves.\footnote{This answers Question 1.}
       N/A & No \\
     \autoref{fig:q1_avg} & 100 & 1000 & 20 & No & 0.001 & 0.1 & 0.1 & No &
       N/A & No \\
+    \autoref{fig:ext_basic_vs_nn} (Basic) & 100 & 1000 & 20 & No & 0.2 & 0.8 &
+      0.6 & No & N/A & No \\
+    \autoref{fig:ext_basic_vs_nn} (NN) & 100 & 1000 & 20 & No & 0.2 & 0.8 &
+      0.6 & No & N/A & Yes \\
     \hline
   \end{tabular}
   \caption{Parameters for figures generated.}

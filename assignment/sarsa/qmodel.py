@@ -66,9 +66,15 @@ class BasicQsEligibilityTrace(BasicQs):
                          discount_rate)
         self._trace_decay_rate = trace_decay_rate
         self._trace = np.zeros((num_states, num_actions))
+        self._current_episode_number = None
 
     def update(self, state, action, reward, new_state, new_action,
                episode_number, cached=None):
+        # Reset the eligibility trace at the start of each episode
+        if episode_number != self._current_episode_number:
+            self._trace = np.zeros(self._trace.shape)
+            self._current_episode_number = episode_number
+
         dq = self._learning_rate * (reward +
                                     (self._discount_rate *
                                      self._qs[new_state, new_action]) -
@@ -120,9 +126,14 @@ class NeuralQsEligibility(NeuralQs):
         super().__init__(num_states, num_actions, learning_rate, discount_rate)
         self._trace_decay_rate = trace_decay_rate
         self._trace = np.zeros((num_states, num_actions))
+        self._current_episode_number = None
 
     def update(self, state, action, reward, new_state, new_action,
                episode_number, cached=None):
+        # Reset the eligibility trace at the start of each episode
+        if episode_number != self._current_episode_number:
+            self._trace = np.zeros(self._trace.shape)
+            self._current_episode_number = episode_number
         dw = self._learning_rate * (reward +
                                     (self._discount_rate *
                                      cached['new_qs'][new_action]) -

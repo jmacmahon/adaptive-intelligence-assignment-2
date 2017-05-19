@@ -20,6 +20,8 @@ NUM_PROCESSES = 6
 coloredlogs.install(level='WARN')
 coloredlogs.install(level='INFO', logger=getLogger('assignment.driver'))
 
+hr_environment = HomingRobot(10, 10, (5, 5), 10, 0)
+
 e_greedy_decay_policy_partial = partial(EpsilonGreedyDecay, epsilon=0.5)
 e_greedy_policy_partial = partial(EpsilonGreedyDecay, epsilon=0.1)
 basic_qs_partial = partial(BasicQs, initial_value=0,
@@ -40,9 +42,7 @@ def moving_average(a, n=3):
 
 
 def question1_single_curves(num_episodes=1000, max_episode_step=20,
-                            hr_environment=None, epsilon=0.001, avg_over=50):
-    if hr_environment is None:
-        hr_environment = HomingRobot(10, 10, (5, 5), 10, 0)
+                            epsilon=0.001, avg_over=50):
     egreedy_partial = partial(EpsilonGreedy, epsilon=epsilon)
     basic_qs_partial = partial(BasicQs, initial_value=0, learning_rate=0.1,
                                discount_rate=0.1)
@@ -55,12 +55,42 @@ def question1_single_curves(num_episodes=1000, max_episode_step=20,
 
     fig, (ax1, ax2) = plt.subplots(2, 1)
     ax1.plot(moving_average(step_curve_1, n=avg_over))
+    ax1.set_xlabel('Episode number')
+    ax1.set_ylabel('Steps taken to goal')
     ax2.plot(moving_average(step_curve_2, n=avg_over))
+    ax2.set_xlabel('Episode number')
+    ax2.set_ylabel('Steps taken to goal')
     return fig
 
 
+def question1_avg_curve(num_runs=100, num_episodes=1000, max_episode_step=20,
+                        epsilon=0.001, avg_over=50):
+    egreedy_partial = partial(EpsilonGreedy, epsilon=epsilon)
+    basic_qs_partial = partial(BasicQs, initial_value=0, learning_rate=0.1,
+                               discount_rate=0.1)
+    runs = SarsaMultipleRuns(num_runs, num_episodes, max_episode_step,
+                             hr_environment, egreedy_partial, basic_qs_partial)
+
+    step_curves, _ = runs.run(NUM_PROCESSES)
+    xs = np.arange(step_curves.shape[1])
+
+    step_curves = step_curves[:, ::10]
+    xs = xs[::10]
+
+    mean_step_curve = np.mean(step_curves, axis=0)
+    errorbars_step_curve = (np.std(step_curves, axis=0) /
+                            np.sqrt(step_curves.shape[0]))
+
+    fig, step_axes = plt.subplots(1, 1)
+    step_axes.errorbar(x=xs,
+                       y=mean_step_curve,
+                       yerr=errorbars_step_curve)
+    step_axes.set_xlabel('Episode number')
+    step_axes.set_ylabel('Steps taken to goal')
+    plt.show()
+
 def question3_lr_dr(num_runs=20, num_episodes=200, max_episode_step=20,
-                    hr_environment=None, epsilon=0.1, trace_decay_rate=0.5):
+                    epsilon=0.1, trace_decay_rate=0.5):
     """Optimise learning rate, discount rate"""
 
     logger = getLogger('assignment.driver.q3.lr_dr')
@@ -71,9 +101,6 @@ def question3_lr_dr(num_runs=20, num_episodes=200, max_episode_step=20,
     }
 
     # TODO graph epsilon and trace_decay_rate
-
-    if hr_environment is None:
-        hr_environment = HomingRobot(10, 10, (5, 5), 10, 0)
 
     detailed_results = []
     total_combinations = len(list(product(*params.values())))
@@ -104,12 +131,10 @@ def question3_lr_dr(num_runs=20, num_episodes=200, max_episode_step=20,
 
 
 def question3_epsilon(num_runs=1000, num_episodes=200, max_episode_step=20,
-                      hr_environment=None, learning_rate=2, discount_rate=0.6,
+                      learning_rate=2, discount_rate=0.6,
                       trace_decay_rate=0.5):
     logger = getLogger('assignment.driver.q3.epsilon')
 
-    if hr_environment is None:
-        hr_environment = HomingRobot(10, 10, (5, 5), 10, 0)
     qs_partial = partial(NeuralQs, learning_rate=learning_rate,
                          discount_rate=discount_rate)
 
@@ -146,12 +171,9 @@ def question3_epsilon(num_runs=1000, num_episodes=200, max_episode_step=20,
 
 
 def question3_tdr(num_runs=1000, num_episodes=200, max_episode_step=20,
-                  hr_environment=None, learning_rate=2, discount_rate=0.6,
-                  epsilon=1):
+                  learning_rate=2, discount_rate=0.6, epsilon=1):
     logger = getLogger('assignment.driver.q3.epsilon')
 
-    if hr_environment is None:
-        hr_environment = HomingRobot(10, 10, (5, 5), 10, 0)
     policy_partial = partial(EpsilonGreedyDecay, epsilon=epsilon)
 
     trace_decay_rates = [0, 0.2, 0.4, 0.5, 0.7, 0.9]
@@ -191,32 +213,10 @@ def image_monkey():
 
 
 def homing_robot(num_runs=100):
-    hr = HomingRobot(10, 10, (5, 5), 10, 0)
-    sarsa_runs = SarsaMultipleRuns(num_runs, 200, 30, hr,
+    sarsa_runs = SarsaMultipleRuns(num_runs, 200, 30, hr_environment,
                                    e_greedy_decay_policy_partial,
                                    nn_qs_eligibility_partial)
     return sarsa_runs
-
-
-def plot_runs(runs):
-    step_curves, reward_curves = runs.run(NUM_PROCESSES)
-
-    mean_step_curve = np.mean(step_curves, axis=0)
-    errorbars_step_curve = (np.std(step_curves, axis=0) /
-                            np.sqrt(step_curves.shape[0]))
-
-    mean_reward_curve = np.mean(reward_curves, axis=0)
-    errorbars_reward_curve = (np.std(reward_curves, axis=0) /
-                              np.sqrt(reward_curves.shape[0]))
-
-    fig, (step_axes, reward_axes) = plt.subplots(2, 1)
-    step_axes.errorbar(x=np.arange(step_curves.shape[1]),
-                       y=mean_step_curve,
-                       yerr=errorbars_step_curve)
-    reward_axes.errorbar(x=np.arange(reward_curves.shape[1]),
-                         y=mean_reward_curve,
-                         yerr=errorbars_reward_curve)
-    plt.show()
 
 # if __name__ == '__main__':
 #     runs = homing_robot()

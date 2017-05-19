@@ -13,6 +13,11 @@
 \usepackage{graphicx} % support the \includegraphics command and options
 \usepackage{bm}
 
+\usepackage{chngcntr}
+\counterwithin{table}{section}
+\counterwithin{figure}{section}
+\counterwithin{equation}{section}
+
 \title{Reinforcement learning with TD(λ) and a Neural Network}
 \author{Student 120133998, University of Sheffield}
 \date{\today}
@@ -54,15 +59,15 @@ denoted $t_{max}$) is reached, or it reaches its charging station at $(5, 5)$.
 outlined in \cite[Chapter~6]{Sutton1998} with an $\epsilon$-greedy policy.  We
 follow their definition of `discounted return' (denoted $R_t$) as the sum of
 expected rewards (denoted $r_t$) to be obtained under policy $\pi$, with each
-future reward being geometrically discounted by a factor of $\gamma$, i.e.s
+future reward being geometrically discounted by a factor of $\gamma$, i.e.
 \begin{align}
 R_t &= r_t + \gamma r_{t+1} + \gamma^2 r_{t+2} + \ldots \nonumber \\
 \text{or } R_t &= \sum_{i=0}^{\infty}{\gamma^ir_{t+i}} \\
 &\text{where }0 \le \gamma < 1 \nonumber
 \end{align}
 
-(Note that we may relax the restriction to $0 \le \gamma \le 1$ if we know that
-the sequence ($t_n$) eventually becomes 0.)
+(Note that in general we may relax the restriction to $0 \le \gamma \le 1$ if we
+know that the sequence ($t_n$) eventually becomes 0.)
 
 The `Q-value' of a particular state-action pair, denoted $Q^\pi(s, a)$ is the
 expected discounted return after taking action $a$ when in state $s$ and
@@ -90,7 +95,38 @@ select the action with the best Q-value, as estimated by Sarsa, and with
 proability $\epsilon$ we choose randomly between the actions.  This allows a
 certain degree of `exploring' while maintaining a general stability.
 
-\section{Learning curves and evaluation} .
+\section{Learning curves and evaluation} Before moving on to a more in-depth
+discussion, we briefly define the term `learning curve': in the context of our
+task, we will define it as the number of steps taken to achieve the goal (i.e.
+move to position $(5, 5)$) per episode.  Since with each episode, the task is
+expected to be performed increasingly more efficiently, i.e. that the number of
+steps taken to reach the goal should be decreasing, we measure the effectiveness
+of an algorithm or set of parameters by the steepness and eventual resting point
+of the decreasing learning curve.
+
+% TODO check the "usually S = 100" here
+Presented in \autoref{fig:q1_single} are two example learning curves using the
+$\epsilon$-greedy policy.  Since there is an element of randomness in
+$\epsilon$-greedy, and also in the choice of initial position of the robot in
+the environment, the learning curve itself is non-deterministic.  To mitigate
+this uncertainty, we typically average our values over a number of runs; in this
+investigation we denote this number $S$ and usually take $S = 100$.  In
+\autoref{fig:q1_avg} is shown an average learning curve with the same parameters
+as in \autoref{fig:q1_single}, with $S = 100$ and error bars shown.  All further
+learning curve graphs in this report will be of averaged learning
+curves.\footnote{This answers Question 1.}
+
+\begin{figure}
+  \includegraphics[width=0.49\textwidth]{figures/q1_figure_single.png}
+  \caption{Two learning curves, 100-point moving average}
+  \label{fig:q1_single}
+\end{figure}
+
+\begin{figure}
+  \includegraphics[width=0.49\textwidth]{figures/q1_figure_avg.png}
+  \caption{Average learning curve, sampled every 10 data points}
+  \label{fig:q1_avg}
+\end{figure}
 
 \section{Extensions} .
 
@@ -114,7 +150,38 @@ certain degree of `exploring' while maintaining a general stability.
 \onecolumn \appendix
 
 \section{Tables}
-\begin{table}
+\begin{table}[H]
+  \centering
+  \begin{tabular}{c | c c c c c c c c c c c c}
+    \hline
+    & $S$ & $E$ & $t_{max}$ & $\epsilon$ decaying? & $\epsilon$ & $\alpha$ &
+      $\gamma$ & Trace? & $\lambda$ & ANN? \\
+    \hline
+    \autoref{fig:q1_single} & N/A & 1000 & 20 & No & 0.001 & 0.1 & 0.1 & No &
+      N/A & No \\
+    \autoref{fig:q1_avg} & 100 & 1000 & 20 & No & 0.001 & 0.1 & 0.1 & No &
+      N/A & No \\
+    \hline
+  \end{tabular}
+  \caption{Parameters for figures generated.}
+  \label{tab:parameters}
+\end{table}
+
+\begin{itemize*}
+  \item $S$ denotes the number of runs that the figure is averaged over
+  \item $E$ denotes the number of episodes used in each run
+  \item $t_{max}$ denotes the maximum number of steps in any episode
+  \item `$\epsilon$ decaying?' denotes whether a decaying $\epsilon$-greedy
+    policy was used
+  \item $\epsilon$ is the parameter of the $\epsilon$-greedy model
+  \item $\alpha$ is the learning rate
+  \item $\gamma$ is the discount rate
+  \item `Trace?' denotes whether an eligibility trace was used
+  \item $\lambda$ is the trace decay rate
+  \item `ANN?' denotes whether an artificial neural network was used
+\end{itemize*}
+
+\begin{table}[H]
   \centering
   \begin{tabular}{r | c c c c c c c c c c}
     \hline

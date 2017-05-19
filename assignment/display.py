@@ -30,29 +30,3 @@ def get_3d_tunings_figures(tunings, labels=None):
             ax.set_ylabel(labels[y_index])
         ax.plot_surface(*grid, z_values)
     return figures
-
-
-def get_epsilon_curves_figure(epsilon_curves):
-    fig, axes = plt.subplots(1, 1)
-    for ((epsilon, decay_flag), curves) in epsilon_curves.items():
-        if decay_flag:
-            label = 'ε = {}, with decay'.format(epsilon)
-        else:
-            label = 'ε = {}, no decay'.format(epsilon)
-        axes.errorbar(x=np.arange(curves['mean'].shape[0]),
-                      y=curves['mean'],
-                      yerr=curves['errorbars'],
-                      label=label)
-    axes.legend()
-    return fig
-
-
-def get_tdr_curves_figure(tdr_curves):
-    fig, axes = plt.subplots(1, 1)
-    for (tdr, curves) in tdr_curves.items():
-        axes.errorbar(x=np.arange(curves['mean'].shape[0]),
-                      y=curves['mean'],
-                      yerr=curves['errorbars'],
-                      label='λ = {:.1}'.format(tdr))
-    axes.legend()
-    return fig

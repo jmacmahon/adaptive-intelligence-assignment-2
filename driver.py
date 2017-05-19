@@ -49,7 +49,7 @@ def question1_single_curves(num_episodes=1000, max_episode_step=20,
     ax2.plot(moving_average(step_curve_2, n=avg_over))
     ax2.set_xlabel('Episode number')
     ax2.set_ylabel('Steps taken to goal')
-    return fig
+    plt.show()
 
 
 def question1_avg_curve(*args, epsilon=0.001, **kwargs):
@@ -137,8 +137,6 @@ def question3_lr_dr(num_runs=20, num_episodes=200, max_episode_step=20,
         'discount_rate': np.array([0.3, 0.5, 0.6, 0.7, 0.8, 0.9])
     }
 
-    # TODO graph epsilon and trace_decay_rate
-
     detailed_results = []
     total_combinations = len(list(product(*params.values())))
     i = 0
@@ -160,22 +158,17 @@ def question3_lr_dr(num_runs=20, num_episodes=200, max_episode_step=20,
         # evaluation_metric = np.sum(avg_curve[-100:])
 
         results[i, :] = values + (evaluation_metric,)
-        detailed_results.append((kwargs, step_curve))
+        detailed_results.append((kwargs, step_curves))
         i += 1
         logger.info('Evaluated parameter combination {} of {}; values = {}'
                     .format(i, total_combinations, values))
-    return detailed_results, results
+    get_3d_tunings_figures(results, labels=list(params.keys()))
+    plt.show()
 
 
-def question3_epsilon(num_runs=1000, num_episodes=200, max_episode_step=20,
-                      learning_rate=2, discount_rate=0.6,
-                      trace_decay_rate=0.5):
-    logger = getLogger('assignment.driver.q3.epsilon')
+def question3_epsilon(*args, **kwargs):
+    qs_partial = partial(NeuralQs, learning_rate=2, discount_rate=0.6)
 
-    qs_partial = partial(NeuralQs, learning_rate=learning_rate,
-                         discount_rate=discount_rate)
-
-    epsilons = list(product([0, 0.05, 0.1, 0.5, 1], [True, False]))
     epsilons = [(0, False),
                 (0.05, False),
                 (0.1, False),
@@ -184,78 +177,28 @@ def question3_epsilon(num_runs=1000, num_episodes=200, max_episode_step=20,
                 (1, True),
                 (10, True),
                 (100, True)]
-    curves = {}
-    for (i, (epsilon, decay_flag)) in zip(range(len(epsilons)), epsilons):
-        if decay_flag:
-            policy_partial = partial(EpsilonGreedyDecay, epsilon=epsilon)
-        else:
-            policy_partial = partial(EpsilonGreedy, epsilon=epsilon)
-        runs = SarsaMultipleRuns(num_runs, num_episodes, max_episode_step,
-                                 hr_environment, policy_partial, qs_partial)
-        step_curves, _ = runs.run()
-
-        mean_step_curve = np.mean(step_curves, axis=0)
-        errorbars_step_curve = (np.std(step_curves, axis=0) /
-                                np.sqrt(step_curves.shape[0]))
-        curves[(epsilon, decay_flag)] = {
-             'mean': mean_step_curve,
-             'errorbars': errorbars_step_curve
-        }
-        logger.info(('Evaluated epsilon trial {} of {}; epsilon = {}, ' +
-                     'decay_flag = {}')
-                    .format(i + 1, len(epsilons), epsilon, decay_flag))
-    return curves
+    models = [
+        {'policy': partial((EpsilonGreedyDecay if decay_flag
+                            else EpsilonGreedy), epsilon=epsilon),
+         'qs': qs_partial,
+         'label': ('ε = {}, with decay' if decay_flag
+                   else 'ε = {}, no decay')
+                   .format(epsilon)}
+        for (epsilon, decay_flag) in epsilons
+    ]
+    compare(models, *args, **kwargs)
 
 
-def question3_tdr(num_runs=1000, num_episodes=200, max_episode_step=20,
-                  learning_rate=2, discount_rate=0.6, epsilon=1):
-    logger = getLogger('assignment.driver.q3.epsilon')
+def question3_tdr(*args, **kwargs):
+    policy_partial = partial(EpsilonGreedyDecay, epsilon=0.1)
 
-    policy_partial = partial(EpsilonGreedyDecay, epsilon=epsilon)
-
-    trace_decay_rates = [0, 0.2, 0.4, 0.5, 0.7, 0.9]
-    curves = {}
-    for (i, trace_decay_rate) in zip(range(len(trace_decay_rates)),
-                                     trace_decay_rates):
-        qs_partial = partial(NeuralQsEligibility, learning_rate=learning_rate,
-                             discount_rate=discount_rate,
-                             trace_decay_rate=trace_decay_rate)
-        runs = SarsaMultipleRuns(num_runs, num_episodes, max_episode_step,
-                                 hr_environment, policy_partial, qs_partial)
-        step_curves, _ = runs.run()
-
-        mean_step_curve = np.mean(step_curves, axis=0)
-        errorbars_step_curve = (np.std(step_curves, axis=0) /
-                                np.sqrt(step_curves.shape[0]))
-        curves[trace_decay_rate] = {
-             'mean': mean_step_curve,
-             'errorbars': errorbars_step_curve
-        }
-        logger.info('Evaluated trace_decay_rate trial {} of {}; epsilon = {}'
-                    .format(i + 1, len(trace_decay_rates), trace_decay_rate))
-    return curves
-
-
-def question3_load_pickle(commit='362a88b'):
-    with open('q3_results_{}.pickle'.format(commit), 'rb') as f:
-        return load(f)
-
-
-def image_monkey():
-    im = ImageMonkey()
-    sarsa_runs = SarsaMultipleRuns(100, 100, 20, im,
-                                   e_greedy_decay_policy_partial,
-                                   basic_qs_eligibility_partial)
-    return sarsa_runs
-
-
-def homing_robot(num_runs=100):
-    sarsa_runs = SarsaMultipleRuns(num_runs, 200, 30, hr_environment,
-                                   e_greedy_decay_policy_partial,
-                                   nn_qs_eligibility_partial)
-    return sarsa_runs
-
-# if __name__ == '__main__':
-#     runs = homing_robot()
-#     curves = runs.run()
-#     print(curves)
+    trace_decay_rates = [0.0, 0.2, 0.4, 0.5, 0.7, 0.9]
+    models = [
+        {'policy': policy_partial,
+         'qs': partial(NeuralQsEligibility, learning_rate=0.8,
+                       discount_rate=0.6,
+                       trace_decay_rate=trace_decay_rate),
+         'label': 'λ = {:.1}'.format(trace_decay_rate)}
+        for trace_decay_rate in trace_decay_rates
+    ]
+    compare(models, *args, **kwargs)

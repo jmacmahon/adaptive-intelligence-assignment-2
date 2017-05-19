@@ -104,8 +104,13 @@ def compare(models, num_runs=100, num_episodes=1000, max_episode_step=20,
     ii = 0
     for model in models:
         ii += 1
+        if 'environment' in model:
+            environment = model['environment']
+        else:
+            environment = hr_environment
+
         runs = SarsaMultipleRuns(num_runs, num_episodes, max_episode_step,
-                                 hr_environment, model['policy'], model['qs'])
+                                 environment, model['policy'], model['qs'])
         step_curves, _ = runs.run()
         step_curves = step_curves[:, ::graph_step]
 
@@ -201,5 +206,24 @@ def question3_tdr(*args, **kwargs):
                        trace_decay_rate=trace_decay_rate),
          'label': 'λ = {:.1}'.format(trace_decay_rate)}
         for trace_decay_rate in trace_decay_rates
+    ]
+    compare(models, *args, **kwargs)
+
+def question5(*args, **kwargs):
+    policy_partial = partial(EpsilonGreedy, epsilon=0.1)
+    qs_partial = partial(NeuralQsEligibility, learning_rate=0.8,
+                         discount_rate=0.6,
+                         trace_decay_rate=0.5)
+    models = [
+        {'policy': policy_partial,
+         'qs': qs_partial,
+         'environment': HomingRobot(10, 10, (5, 5), 10, 0,
+                                    actions=HomingRobot.actions_4),
+         'label': '4 actions'},
+        {'policy': policy_partial,
+         'qs': qs_partial,
+         'environment': HomingRobot(10, 10, (5, 5), 10, 0,
+                                    actions=HomingRobot.actions_8),
+         'label': '8 actions'}
     ]
     compare(models, *args, **kwargs)

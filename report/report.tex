@@ -178,7 +178,6 @@ where $\epsilon_0$ is a parameter for the initial value of $\epsilon$.  As can
 be seen in \autoref{fig:ext_epsilon_vs_decay}, this made little impact on the
 learning curves.
 
-
 \begin{figure}
   \includegraphics[width=0.49\textwidth]{figures/epsilon_decay.png}
   \caption{Learning curves for the $\epsilon$-greedy policy; plain vs. decaying
@@ -186,7 +185,20 @@ learning curves.
   \label{fig:ext_epsilon_vs_decay}
 \end{figure}
 
-\subsection{Extended actions} .
+\subsection{Extended actions} Finally, we allowed a further 4 movements to be
+made in our environment, along the diagonals of the compass points.  This allows
+for a diagonal move to be made in one action rather than two, and thus decreases
+the minimum number of moves necessary to reach the goal by up to a half.
+
+This effect can be clearly seen in \autoref{fig:ext_8_actions}, in which the
+learning curve for the 8-action environment stabilises at a lower number of
+steps than that of the 4-action environment.
+
+\begin{figure}
+  \includegraphics[width=0.49\textwidth]{figures/4_actions_vs_8_actions.png}
+  \caption{Comparing a 4-action environment to an 8-action environment}
+  \label{fig:ext_8_actions}
+\end{figure}
 
 \section{Parameter tuning} .
 
@@ -215,6 +227,8 @@ learning curves.
       & 0.8 & 0.6 & $*$ & $*$ & No \\
     \autoref{fig:ext_epsilon_vs_decay} & 100 & 200 & 20 & $*$ & $*$ & 0.8 & 0.6
       & No & N/A & Yes \\
+    \autoref{fig:ext_8_actions} & 100 & 400 & 20 & No & 0.1 & 0.8 & 0.6
+      & Yes & 0.5 & Yes \\
     \hline
   \end{tabular}
   \caption{Parameters for figures generated.}

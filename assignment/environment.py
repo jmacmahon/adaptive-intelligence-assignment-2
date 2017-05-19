@@ -56,14 +56,18 @@ class HomingRobot(object):
     _logger = getLogger('assignment.environment.homingrobot')
 
     # Down, up, right, left
-    _actions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+    actions_4 = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+    actions_8 = [(0, 1), (0, -1), (1, 0), (-1, 0),
+                 (1, 1), (1, -1), (-1, -1), (-1, 1)]
 
-    def __init__(self, width, height, home_coords, reward, punishment):
+    def __init__(self, width, height, home_coords, reward, punishment,
+                 actions=None):
         self._width = width
         self._height = height
         self._home_coords = home_coords
         self._reward = reward
         self._punishment = punishment
+        self._actions = self.actions_4 if actions is None else actions
         self.reset()
 
     def reset(self):

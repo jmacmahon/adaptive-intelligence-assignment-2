@@ -30,6 +30,42 @@ def moving_average(a, n=3):
     return ret[n - 1:] / n
 
 
+def compare(models, num_runs=100, num_episodes=1000, max_episode_step=20,
+            graph_step=10):
+    logger = getLogger('assignment.driver.compare')
+
+    xs = np.arange(num_episodes)[::graph_step]
+    fig, axes = plt.subplots(1, 1)
+    ii = 0
+    for model in models:
+        ii += 1
+        if 'environment' in model:
+            environment = model['environment']
+        else:
+            environment = hr_environment
+
+        runs = SarsaMultipleRuns(num_runs, num_episodes, max_episode_step,
+                                 environment, model['policy'], model['qs'])
+        step_curves, _ = runs.run()
+        step_curves = step_curves[:, ::graph_step]
+
+        mean_step_curve = np.mean(step_curves, axis=0)
+        errorbars_step_curve = (np.std(step_curves, axis=0) /
+                                np.sqrt(step_curves.shape[0]))
+
+        axes.errorbar(x=xs,
+                      y=mean_step_curve,
+                      yerr=errorbars_step_curve,
+                      label=model['label'])
+        axes.set_xlabel('Episode number')
+        axes.set_ylabel('Steps taken to goal')
+
+        logger.info('Done model {} of {}: {}'
+                    .format(ii, len(models), model['label']))
+    axes.legend()
+    plt.show()
+
+
 def question1_single_curves(num_episodes=1000, max_episode_step=20,
                             epsilon=0.001, avg_over=50):
     egreedy_partial = partial(EpsilonGreedy, epsilon=epsilon)
@@ -95,80 +131,32 @@ def nn_basic_eligibility_comparison(*args, epsilon=0.2, **kwargs):
     return compare(models, *args, **kwargs)
 
 
-def compare(models, num_runs=100, num_episodes=1000, max_episode_step=20,
-            graph_step=10):
-    logger = getLogger('assignment.driver.compare')
-
-    xs = np.arange(num_episodes)[::graph_step]
-    fig, axes = plt.subplots(1, 1)
-    ii = 0
-    for model in models:
-        ii += 1
-        if 'environment' in model:
-            environment = model['environment']
-        else:
-            environment = hr_environment
-
-        runs = SarsaMultipleRuns(num_runs, num_episodes, max_episode_step,
-                                 environment, model['policy'], model['qs'])
-        step_curves, _ = runs.run()
-        step_curves = step_curves[:, ::graph_step]
-
-        mean_step_curve = np.mean(step_curves, axis=0)
-        errorbars_step_curve = (np.std(step_curves, axis=0) /
-                                np.sqrt(step_curves.shape[0]))
-
-        axes.errorbar(x=xs,
-                      y=mean_step_curve,
-                      yerr=errorbars_step_curve,
-                      label=model['label'])
-        axes.set_xlabel('Episode number')
-        axes.set_ylabel('Steps taken to goal')
-
-        logger.info('Done model {} of {}: {}'
-                    .format(ii, len(models), model['label']))
-    axes.legend()
-    plt.show()
+def question3_alpha(*args, **kwargs):
+    policy = partial(EpsilonGreedy, epsilon=0.1)
+    learning_rates = np.arange(0, 1.2, 0.2)
+    models = [
+        {'policy': policy,
+         'qs': partial(NeuralQsEligibility, learning_rate=learning_rate,
+                       discount_rate=0.6,
+                       trace_decay_rate=0.5),
+         'label': 'α = {:.1}'.format(learning_rate)}
+        for learning_rate in learning_rates
+    ]
+    compare(models, *args, **kwargs)
 
 
-def question3_lr_dr(num_runs=20, num_episodes=200, max_episode_step=20,
-                    epsilon=0.1, trace_decay_rate=0.5):
-    """Optimise learning rate, discount rate"""
-
-    logger = getLogger('assignment.driver.q3.lr_dr')
-
-    params = {
-        'learning_rate': np.arange(0.2, 4, 0.4),
-        'discount_rate': np.array([0.3, 0.5, 0.6, 0.7, 0.8, 0.9])
-    }
-
-    detailed_results = []
-    total_combinations = len(list(product(*params.values())))
-    i = 0
-    results = np.empty((total_combinations, len(params) + 1))
-    for values in product(*params.values()):
-        kwargs = dict(zip(params.keys(), values))
-        policy_partial = partial(EpsilonGreedy, epsilon=epsilon)
-        qs_partial = partial(NeuralQsEligibility,
-                             learning_rate=kwargs['learning_rate'],
-                             discount_rate=kwargs['discount_rate'],
-                             trace_decay_rate=trace_decay_rate)
-        runs = SarsaMultipleRuns(num_runs, num_episodes, max_episode_step,
-                                 hr_environment, policy_partial, qs_partial)
-        step_curves, _ = runs.run()
-
-        # Weighted average steps
-        avg_curve = np.mean(step_curves, axis=0)
-        evaluation_metric = np.sum(np.linspace(0, 1, num_episodes) * avg_curve)
-        # evaluation_metric = np.sum(avg_curve[-100:])
-
-        results[i, :] = values + (evaluation_metric,)
-        detailed_results.append((kwargs, step_curves))
-        i += 1
-        logger.info('Evaluated parameter combination {} of {}; values = {}'
-                    .format(i, total_combinations, values))
-    get_3d_tunings_figures(results, labels=list(params.keys()))
-    plt.show()
+def question3_gamma(*args, **kwargs):
+    policy = partial(EpsilonGreedy, epsilon=0.1)
+    discount_rates = np.arange(0, 1.2, 0.2)
+    models = [
+        {'policy': policy,
+         'qs': partial(NeuralQsEligibility, learning_rate=0.8,
+                       discount_rate=discount_rate,
+                       trace_decay_rate=0.5),
+         'label': 'γ = {:.1}'.format(discount_rate)}
+        for discount_rate in discount_rates
+    ]
+    compare(models, *args, **kwargs)
 
 
 def question3_epsilon(*args, **kwargs):
@@ -195,8 +183,8 @@ def question3_epsilon(*args, **kwargs):
     compare(models, *args, **kwargs)
 
 
-def question3_tdr(*args, **kwargs):
-    policy_partial = partial(EpsilonGreedyDecay, epsilon=0.1)
+def question3_lambda(*args, **kwargs):
+    policy_partial = partial(EpsilonGreedyDecay, epsilon=1)
 
     trace_decay_rates = [0.0, 0.2, 0.4, 0.5, 0.7, 0.9]
     models = [

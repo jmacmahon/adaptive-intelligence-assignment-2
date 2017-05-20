@@ -37,8 +37,8 @@
     parameters.
 
     \end{abstract}
-    \tableofcontents
-    \vspace{20pt}
+    % \tableofcontents
+    % \vspace{20pt}
   \end{@twocolumnfalse}
 }]
 
@@ -159,7 +159,7 @@ it becomes known as Sarsa(λ).
 As suggested by the assignment brief, we implemented an eligibility trace to
 both our basic model and our ANN-backed model.  The results were successful, as
 can be seen again in \autoref{fig:ext_basic_vs_nn_vs_eligibility}.\footnote{This
-answers question 2.}
+answers Question 2.}
 
 \begin{figure}
   \includegraphics[width=0.49\textwidth]{figures/basic_vs_nn_vs_eligibility.png}
@@ -168,6 +168,7 @@ answers question 2.}
   \label{fig:ext_basic_vs_nn_vs_eligibility}
 \end{figure}
 
+% TODO justify why?
 \subsection{Decaying $\epsilon$} Another extension we implement is simply
 letting the value of $\epsilon$ in the $\epsilon$-greedy policy decay over time.
 We establish a rule, with $n$ being the episode number in the run, of
@@ -191,8 +192,9 @@ for a diagonal move to be made in one action rather than two, and thus decreases
 the minimum number of moves necessary to reach the goal by up to a half.
 
 This effect can be clearly seen in \autoref{fig:ext_8_actions}, in which the
-learning curve for the 8-action environment stabilises at a lower number of
-steps than that of the 4-action environment.
+learning curve for the 8-action environment stabilises between $0.5\times$ and
+$1\times$ the number of steps as the 4-action environment.\footnote{This answers
+Question 5.}
 
 \begin{figure}
   \includegraphics[width=0.49\textwidth]{figures/4_actions_vs_8_actions.png}
@@ -200,7 +202,52 @@ steps than that of the 4-action environment.
   \label{fig:ext_8_actions}
 \end{figure}
 
-\section{Parameter tuning} .
+\section{Parameter tuning} In this section we attempt to find optimal parameters
+for our learning model.  Owing to the computational resources available to us,
+we must assume that all parameters under consideration are independent.  As a
+result of this assumption, when comparing different values of, say, $\epsilon$,
+we may fix the other parameters arbitrarily, rather than having to compare our
+chosen testing values of $\epsilon$ with every combination of values for the
+other parameters.
+
+The parameters we will be considering for our optimisation will be $\epsilon$
+(and whether to use a decaying-$\epsilon$ model), the learning rate ($\alpha$),
+the discount rate ($\gamma$), and the eligibility trace decay rate ($\lambda$).
+
+First we compare values for $\alpha$, in \autoref{fig:tuning_alpha}.  As
+expected, $\alpha = 0$ performs extremely badly; and the best value seems to be
+somewhere in the range $\alpha \in [0.6, 1.0]$.
+
+\begin{figure}
+  \includegraphics[width=0.49\textwidth]{figures/tuning_alpha.png}
+  \caption{Tuning the $\alpha$ parameter}
+  \label{fig:tuning_alpha}
+\end{figure}
+
+Next, we compare values for $\gamma$, in \autoref{fig:tuning_gamma}.  The best
+value seems to be $\gamma \approx 0.6$.
+
+\begin{figure}
+  \includegraphics[width=0.49\textwidth]{figures/tuning_gamma.png}
+  \caption{Tuning the $\gamma$ parameter}
+  \label{fig:tuning_gamma}
+\end{figure}
+
+We have already calculated the necessary curves to optimise $\epsilon$, in
+\autoref{fig:ext_epsilon_vs_decay}.  It is difficult to tell what the optimal
+value is, but it seems to be either $\epsilon = 0$ (i.e. a completely greedy
+policy), or $\epsilon_t = \frac{1}{t}$.
+
+Finally, we optimise $\lambda$, in \autoref{fig:tuning_lambda}.  In terms of the
+final resting efficiency of the algorithm, it seems we are tied between $\lambda =
+0.2, 0.4, 0.5$; however, when we take the initial steepness of the curve into
+account, $\lambda = 0.5$ clearly wins.\footnote{This answers Question 3.}
+
+\begin{figure}
+  \includegraphics[width=0.49\textwidth]{figures/tuning_lambda.png}
+  \caption{Tuning the $\lambda$ parameter for the eligibility trace}
+  \label{fig:tuning_lambda}
+\end{figure}
 
 \subsection{Representation of weights} .
 
@@ -216,19 +263,23 @@ steps than that of the 4-action environment.
   \centering
   \begin{tabular}{c | c c c c c c c c c c c c}
     \hline
-    & $S$ & $E$ & $t_{max}$ & $\epsilon$ decaying? & $\epsilon$ & $\alpha$ &
-      $\gamma$ & Trace? & $\lambda$ & ANN? \\
+    & $|\mathcal{A}|$ & $S$ & $E$ & $t_{max}$ & $\epsilon$ decaying? &
+      $\epsilon$ & $\alpha$ & $\gamma$ & Trace? & $\lambda$ & ANN? \\
     \hline
-    \autoref{fig:q1_single} & N/A & 1000 & 20 & No & 0.001 & 0.1 & 0.1 & No &
+    \autoref{fig:q1_single} & 4 & N/A & 1000 & 20 & No & 0.001 & 0.1 & 0.1 &
+      No & N/A & No \\
+    \autoref{fig:q1_avg} & 4 & 100 & 1000 & 20 & No & 0.001 & 0.1 & 0.1 & No &
       N/A & No \\
-    \autoref{fig:q1_avg} & 100 & 1000 & 20 & No & 0.001 & 0.1 & 0.1 & No &
-      N/A & No \\
-    \autoref{fig:ext_basic_vs_nn_vs_eligibility} & 200 & 200 & 20 & No & 0.2
-      & 0.8 & 0.6 & $*$ & $*$ & No \\
-    \autoref{fig:ext_epsilon_vs_decay} & 100 & 200 & 20 & $*$ & $*$ & 0.8 & 0.6
-      & No & N/A & Yes \\
-    \autoref{fig:ext_8_actions} & 100 & 400 & 20 & No & 0.1 & 0.8 & 0.6
+    \autoref{fig:ext_basic_vs_nn_vs_eligibility} & 4 & 200 & 200 & 20 & No &
+      0.2 & 0.8 & 0.6 & $*$ & $*$ & $*$ \\
+    \autoref{fig:ext_epsilon_vs_decay} & 4 & 100 & 200 & 20 & $*$ & $*$ & 0.8 &
+      0.6 & No & N/A & Yes \\
+    \autoref{fig:ext_8_actions} & $*$ & 100 & 400 & 20 & No & 0.1 & 0.8 & 0.6
       & Yes & 0.5 & Yes \\
+    \autoref{fig:tuning_alpha} & 4 & 200 & 200 & 20 & No & 0.1 & $*$ & 0.6 &
+      Yes & 0.5 & Yes \\
+    \autoref{fig:tuning_gamma} & 4 & 100 & 200 & 20 & No & 0.1 & 0.8 & $*$ &
+      Yes & 0.5 & Yes \\
     \hline
   \end{tabular}
   \caption{Parameters for figures generated.}
@@ -236,6 +287,8 @@ steps than that of the 4-action environment.
 \end{table}
 
 \begin{itemize*}
+  \item $|\mathcal{A}|$ denotes the number of actions available to the actor in
+    the environment
   \item $S$ denotes the number of runs that the figure is averaged over
   \item $E$ denotes the number of episodes used in each run
   \item $t_{max}$ denotes the maximum number of steps in any episode

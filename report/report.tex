@@ -249,7 +249,15 @@ account, $\lambda = 0.5$ clearly wins.\footnote{This answers Question 3.}
   \label{fig:tuning_lambda}
 \end{figure}
 
-\subsection{Representation of weights} .
+\subsection{Representation of weights} When using the state as input to the
+neural network, we choose to represent it as a vector of zeros with a single 1
+representing the state index: $[0, \ldots, 0, 1, 0, \ldots, 0]^T$.  Thus, fixing
+a state $\sigma$, the weights connecting $\nu_\sigma$ (the input neuron) to each
+of the four output neurons encode the Q-values directly.  Taking the largest of
+these weights gives us the preferred action of the model when in state $\sigma$.
+Thus, we may produce a diagram of state-transitions when following a greedy
+policy, and this diagram is represented in
+\autoref{tab:computed_directions}.\footnote{This answers Question 4.}
 
 \section{Limits of the model} .
 
@@ -321,7 +329,8 @@ account, $\lambda = 0.5$ clearly wins.\footnote{This answers Question 3.}
     9 & ↑ & ↑ & ↑ & → & ↑ & ↑ & ↑ & ← & ↑ & ↑ \\
     \hline
   \end{tabular}
-  \caption{Directions}
+  \caption{Best-choice actions for each state, as computed in one run of the
+  algorithm.  The goal state is highlighted in pink.}
   \label{tab:computed_directions}
 \end{table}
 

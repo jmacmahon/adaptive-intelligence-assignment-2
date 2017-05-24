@@ -6,6 +6,11 @@ from .core import SarsaRun, SarsaEpisode
 
 
 class SarsaMultipleRuns(object):
+    """Carry out multiple independent runs of the Sarsa algorithm
+
+    Performs n runs in parallel (with multiprocessing) and returns n learning
+    curves.
+    """
     _logger = getLogger('assignment.sarsa.multipleruns')
 
     def __init__(self, num_runs, num_episodes, max_episode_step, environment,

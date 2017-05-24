@@ -3,6 +3,8 @@ from logging import getLogger
 
 
 class QModel(object):
+    """Abstract class of Q-value model."""
+
     def __init__(self, num_states, num_actions):
         self._num_states = num_states
         self._num_actions = num_actions
@@ -24,6 +26,9 @@ class QModel(object):
 
 
 class BasicQs(QModel):
+    """Basic Q-value model
+
+    Keeps Q-values in a table and updates them towards the target."""
     _logger = getLogger('assignment.sarsa.qs.basicqs')
 
     def __init__(self, initial_value, num_states, num_actions, learning_rate,
@@ -58,6 +63,8 @@ class BasicQs(QModel):
 
 
 class BasicQsEligibilityTrace(BasicQs):
+    """Basic Q-value model with an eligibility trace"""
+
     _logger = getLogger('assignment.sarsa.qs.basicqs_eligibility')
 
     def __init__(self, initial_value, num_states, num_actions, learning_rate,
@@ -88,6 +95,8 @@ class BasicQsEligibilityTrace(BasicQs):
 
 
 class NeuralQs(QModel):
+    """Model using a neural network to generate Q-values"""
+
     _logger = getLogger('assignment.sarsa.qs.neural')
 
     def __init__(self, num_states, num_actions, learning_rate, discount_rate):
@@ -119,6 +128,8 @@ class NeuralQs(QModel):
 
 
 class NeuralQsEligibility(NeuralQs):
+    """Neural network Q-value model with an eligibility trace"""
+
     _logger = getLogger('assignment.sarsa.qs.neural')
 
     def __init__(self, num_states, num_actions, learning_rate, discount_rate,

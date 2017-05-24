@@ -3,6 +3,12 @@ from logging import getLogger
 
 
 class SarsaEpisode(object):
+    """A model episode in the Sarsa algorithm to be run multiple times
+
+    Abstract design -- takes a model of the environment, a parametrised Q-value
+    model and an abstract "policy" as parameters.
+    """
+
     _logger = getLogger('assignment.sarsa.episode')
 
     def __init__(self, environment, parametrised_qs, policy, max_steps):
@@ -43,6 +49,10 @@ class SarsaEpisode(object):
 
 
 class SarsaRun(object):
+    """A single run of the Sarsa algorithm
+
+    Consists of running the same episode model many times to produce a learning
+    curve"""
     _logger = getLogger('assignment.sarsa.run')
 
     def __init__(self, num_episodes, episode):

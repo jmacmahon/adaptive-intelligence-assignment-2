@@ -13,7 +13,6 @@ from assignment.sarsa.core import *
 from assignment.sarsa.policy import *
 from assignment.sarsa.qmodel import *
 from assignment.sarsa.evaluation import *
-from assignment.display import *
 
 NUM_PROCESSES = 6
 
@@ -98,7 +97,7 @@ def question1_avg_curve(*args, epsilon=0.001, **kwargs):
          'label': 'Averaged learning curve'}
     ]
 
-    compare(models)
+    compare(models, *args, **kwargs)
 
 
 def nn_basic_eligibility_comparison(*args, epsilon=0.2, **kwargs):

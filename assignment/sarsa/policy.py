@@ -3,14 +3,20 @@ from logging import getLogger
 
 
 class Policy(object):
+    """Abstract class for a policy."""
+
     def __init__(self, num_actions):
         self._num_actions = num_actions
 
-    def __call__(self, qs, t):
+    def choose_action(self, qs, t):
         raise NotImplementedError()
 
 
 class EpsilonGreedy(Policy):
+    """Epsilon-greedy policy
+
+    Chooses the best action with probablity (1-epsilon), otherwise chooses
+    randomly."""
     _logger = getLogger('assignment.sarsa.policy.epsilongreedy')
 
     def __init__(self, num_actions, epsilon):
@@ -28,6 +34,10 @@ class EpsilonGreedy(Policy):
 
 
 class EpsilonGreedyDecay(Policy):
+    """Epsilon-greedy policy with decay
+
+    Same as epsilon-greedy, but the value of epsilon decays with the episode
+    number."""
     _logger = getLogger('assignment.sarsa.policy.epsilongreedy')
 
     def __init__(self, num_actions, epsilon):

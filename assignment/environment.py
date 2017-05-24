@@ -5,6 +5,8 @@ from logging import getLogger
 
 
 class ImageMonkey(object):
+    """Environment model for the button-pressing monkey"""
+
     _logger = getLogger('assignment.environment.imagemonkey')
     # States: 0 = neutral, 1 = pressed red, 2 = pressed green
 
@@ -53,6 +55,8 @@ class ImageMonkey(object):
 
 
 class HomingRobot(object):
+    """Environment model for the Homing Robot"""
+
     _logger = getLogger('assignment.environment.homingrobot')
 
     # Down, up, right, left
